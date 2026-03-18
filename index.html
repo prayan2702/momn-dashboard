@@ -254,7 +254,37 @@ var MOCK = {
       {symbol:'RMDRIP',cost:107.4,qty:769,cmp:40,todayPct:-5.00,currentVal:30760,gain:-51860,gainPct:-62.80,posSize:1.17,cap:'Micro',sector:'Industrials'},
     ]
   },
-  nav: [99.99,100.38,101.31,101.31,101.31,100.34,100.72,100.96,99.76,99.76,99.76,99.76,102.43,104.18,105.37,106.23,107.55,108.88,110.12,109.56,108.92,108.22,109.43,110.05,110.92,111.20,113.15,115.59,114.22,113.05,111.22,112.34,113.88,114.99,113.45,112.20,110.80,109.50,108.23,107.10,105.90,104.50,103.21,102.50,102.09].map((v,i)=>({date:'',nav:v,maxNav:118.42,dd:((v/118.42)-1)*100})),
+  nav: (function(){
+    // Actual NAV data from sheet (row3 onwards, sorted by date)
+    // Format: [date, nav, maxNav, dd%]
+    var raw = [
+      ['2025-03-05',99.99,100.00,-0.01],['2025-03-06',100.38,100.38,0.00],
+      ['2025-03-07',101.31,101.31,0.00],['2025-03-08',101.31,101.31,0.00],
+      ['2025-03-09',101.31,101.31,0.00],['2025-03-10',100.34,101.31,-0.96],
+      ['2025-03-11',100.72,101.31,-0.58],['2025-03-12',100.96,101.31,-0.35],
+      ['2025-03-13',99.76,101.31,-1.53],['2025-03-14',99.76,101.31,-1.53],
+      ['2025-03-15',99.76,101.31,-1.53],['2025-03-16',99.76,101.31,-1.53],
+      ['2025-03-17',102.43,102.43,0.00],['2025-03-18',104.18,104.18,0.00],
+      ['2025-03-19',105.37,105.37,0.00],['2025-03-20',106.23,106.23,0.00],
+      ['2025-03-21',107.55,107.55,0.00],['2025-03-22',107.55,107.55,0.00],
+      ['2025-03-23',107.55,107.55,0.00],['2025-03-24',108.07,108.07,0.00],
+      ['2025-03-25',106.41,108.07,-1.54],['2025-03-26',105.59,108.07,-2.30],
+      ['2025-03-27',106.20,108.07,-1.73],['2025-03-28',105.93,108.07,-1.98],
+      ['2025-03-31',105.93,108.07,-1.98],['2025-04-01',104.62,108.07,-3.19],
+      ['2025-04-02',105.39,108.07,-2.48],['2025-04-03',104.08,108.07,-3.70],
+      ['2025-04-04',102.04,108.07,-5.58],['2025-04-07',97.98,108.07,-9.34],
+      ['2025-04-08',100.10,108.07,-7.38],['2025-04-09',98.40,108.07,-8.95],
+      ['2025-04-11',101.58,108.07,-6.01],['2025-04-30',104.03,108.07,-3.74],
+      ['2025-05-31',106.78,108.07,-1.19],['2025-06-30',112.52,112.52,0.00],
+      ['2025-07-31',111.29,112.52,-1.09],['2025-08-31',109.56,112.52,-2.63],
+      ['2025-09-30',109.43,112.52,-2.75],['2025-10-31',110.92,112.52,-1.42],
+      ['2025-11-30',111.20,112.52,-1.17],['2025-12-31',115.59,115.59,0.00],
+      ['2026-01-31',111.22,118.42,-6.08],['2026-02-28',114.99,118.42,-2.90],
+      ['2026-03-17',106.33,118.42,-10.21],['2026-03-18',106.33,118.42,-10.21],
+      ['2026-03-19',106.33,118.42,-10.21]
+    ];
+    return raw.map(function(r){ return {date:r[0],nav:r[1],maxNav:r[2],dd:r[3]}; });
+  }()),
   performance: [
     {year:2025, months:[null,null,5.93,-1.79,2.64,5.37,-1.10,-1.55,-0.12,1.36,0.25,3.95], yearTotal:15.59},
     {year:2026, months:[-3.78,3.38,-11.22,null,null,null,null,null,null,null,null,null], yearTotal:-11.68}
@@ -387,33 +417,74 @@ function renderKPIs(s) {
 // RENDER: NAV Chart
 // ================================================================
 function renderNAV(navData) {
+  if (!navData || navData.length === 0) return;
   var vals   = navData.map(function(p){ return p.nav; });
   var labels = navData.map(function(p){ return p.date || ''; });
+  var minVal = Math.min.apply(null, vals);
+  var maxVal = Math.max.apply(null, vals);
+  var pad    = (maxVal - minVal) * 0.05;
+
   if (navChartInst) navChartInst.destroy();
   navChartInst = new Chart(document.getElementById('navChart'), {
     type: 'line',
     data: {
       labels: labels,
-      datasets: [{
-        data: vals,
-        borderColor: '#0AD1A6',
-        borderWidth: 1.5,
-        fill: true,
-        backgroundColor: 'rgba(10,209,166,0.06)',
-        pointRadius: 0,
-        tension: 0.3
-      }]
+      datasets: [
+        // Baseline 100 reference line
+        {
+          data: vals.map(function(){ return 100; }),
+          borderColor: 'rgba(240,237,229,0.12)',
+          borderWidth: 1,
+          borderDash: [4,4],
+          fill: false,
+          pointRadius: 0,
+          tension: 0
+        },
+        // NAV line
+        {
+          data: vals,
+          borderColor: '#0AD1A6',
+          borderWidth: 1.8,
+          fill: true,
+          backgroundColor: 'rgba(10,209,166,0.05)',
+          pointRadius: 0,
+          tension: 0.3
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: function(ctx){ return 'NAV: ' + ctx.parsed.y.toFixed(2); }
-      }}},
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index', intersect: false,
+          callbacks: {
+            title: function(ctx){ return ctx[0].label || ''; },
+            label: function(ctx){
+              if (ctx.datasetIndex === 0) return null; // hide baseline tooltip
+              var p = navData[ctx.dataIndex];
+              return [
+                'NAV: ' + ctx.parsed.y.toFixed(2),
+                'Max: ' + (p.maxNav||0).toFixed(2),
+                'DD: '  + (p.dd||0).toFixed(2) + '%'
+              ];
+            }
+          }
+        }
+      },
       scales: {
-        x: { display: false },
+        x: {
+          display: false,
+          ticks: { maxTicksLimit: 8 }
+        },
         y: {
-          grid: { color: document.documentElement.classList.contains('light') ? 'rgba(0,0,0,0.06)' : 'rgba(10,209,166,0.06)' },
-          ticks: { color: document.documentElement.classList.contains('light') ? 'rgba(0,15,8,0.55)' : 'rgba(240,237,229,0.5)', font: { size: 10 }, callback: function(v){ return v.toFixed(0); } }
+          min: Math.max(Math.floor(minVal - pad), 85),
+          grid: { color: 'rgba(240,237,229,0.04)' },
+          ticks: {
+            color: 'rgba(240,237,229,0.4)',
+            font: { size: 10 },
+            callback: function(v){ return v.toFixed(0); }
+          }
         }
       }
     }
