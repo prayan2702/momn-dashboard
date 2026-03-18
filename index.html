@@ -140,7 +140,7 @@ tbody tr:last-child td{border-bottom:none}
   <div class="chart-row">
     <div class="card">
       <div class="card-title">NAV — daily history</div>
-      <div style="position:relative;height:200px"><canvas id="navChart"></canvas></div>
+      <div style="position:relative;height:220px"><canvas id="navChart"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Sector allocation</div>
@@ -474,8 +474,27 @@ function renderNAV(navData) {
       },
       scales: {
         x: {
-          display: false,
-          ticks: { maxTicksLimit: 8 }
+          display: true,
+          ticks: {
+            color: 'rgba(240,237,229,0.35)',
+            font: { size: 9, family: 'inherit' },
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 12,
+            callback: function(val, index) {
+              var label = this.getLabelForValue(val);
+              if (!label) return '';
+              var parts = label.split('-');
+              if (parts.length < 3) return '';
+              var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              var mo  = parseInt(parts[1], 10) - 1;
+              var yr  = parts[0].slice(2);
+              var day = parseInt(parts[2], 10);
+              return day <= 7 ? months[mo] + " '" + yr : '';
+            }
+          },
+          grid: { display: false },
+          border: { display: false }
         },
         y: {
           min: Math.max(Math.floor(minVal - pad), 85),
