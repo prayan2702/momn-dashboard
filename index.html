@@ -39,7 +39,7 @@ a{color:var(--blue);text-decoration:none}
 .btn:hover{background:var(--l3);color:var(--t1);border-color:var(--sep)}
 
 /* ── KPI strip ─────────────────────────────────────────────────── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:20px 22px;box-shadow:var(--card-shadow);transition:border-color .3s,transform .2s}
 .kpi:hover{border-color:var(--sep);transform:translateY(-2px)}
 .kpi-label{font-size:11px;font-weight:700;color:var(--t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
@@ -102,7 +102,7 @@ tbody tr:last-child td{border-bottom:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:900px){
-  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
   .chart-row{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
   .kpi-val{font-size:22px}
@@ -134,6 +134,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="kpi"><div class="kpi-label">XIRR</div><div class="kpi-val" id="kpiXirr">—</div><div class="kpi-sub">Since inception</div></div>
     <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-val b" id="kpiNav">—</div><div class="kpi-sub" id="kpiDD">—</div></div>
     <div class="kpi"><div class="kpi-label">Today's Gain</div><div class="kpi-val" id="kpiToday">—</div><div class="kpi-sub" id="kpiStocks">—</div></div>
+    <div class="kpi"><div class="kpi-label">Drawdown</div><div class="kpi-val r" id="kpiDD2">—</div><div class="kpi-sub" id="kpiDDMax">—</div></div>
   </div>
 
   <!-- Charts Row -->
@@ -220,7 +221,7 @@ var MOCK_MODE = false;
 // ================================================================
 var MOCK = {
   portfolio: {
-    summary: { netCashflow:2904418, totalCurrentValue:2790092, absoluteGains:-114326, absoluteGainsPct:-3.94, xirr:-6.62, nav:104.32, maxNav:118.42, dd:-11.88, todayGain:47619, stockCount:30 },
+    summary: { netCashflow:2904418, totalCurrentValue:2790092, absoluteGains:-114326, absoluteGainsPct:-3.94, xirr:-6.62, nav:106.33, maxNav:118.42, dd:-10.21, maxDD:-13.79, todayGain:47619, stockCount:30 },
     holdings: [
       {symbol:'CUPID',cost:35.4,qty:2225,cmp:76,todayPct:-6.45,currentVal:169100,gain:90290,gainPct:114.85,posSize:6.44,cap:'Micro',sector:'Consumer'},
       {symbol:'MTARTECH',cost:2473,qty:37,cmp:3385,todayPct:-3.67,currentVal:125245,gain:33744,gainPct:36.88,posSize:4.76,cap:'Micro',sector:'Industrials'},
@@ -402,8 +403,21 @@ function renderKPIs(s) {
   var maxNav = n(s.maxNav || s.max_nav || s.maxNavValue);
   var dd     = n(s.dd || s.drawdown);
   set('kpiNav', nav > 0 ? nav.toFixed(2) : '—');
-  set('kpiDD',  'Max: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—') + ' (DD: ' + dd.toFixed(1) + '%)');
-  document.getElementById('kpiDD').className = 'kpi-sub ' + (dd < 0 ? 'r' : 'g');
+  set('kpiDD',  'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
+  document.getElementById('kpiDD').className = 'kpi-sub';
+
+  // Standalone Drawdown card — latest DD% from NAV sheet col I (last row)
+  var ddEl    = document.getElementById('kpiDD2');
+  var ddMaxEl = document.getElementById('kpiDDMax');
+  if (ddEl) {
+    ddEl.textContent = dd !== 0 ? (dd > 0 ? '+' : '') + dd.toFixed(2) + '%' : '—';
+    ddEl.className   = 'kpi-val ' + (dd < 0 ? 'r' : 'g');
+  }
+  if (ddMaxEl) {
+    var maxDD = n(s.maxDD);
+    ddMaxEl.textContent = 'Max DD: ' + (maxDD !== 0 ? maxDD.toFixed(2) + '%' : '—');
+    ddMaxEl.className   = 'kpi-sub ' + (maxDD < 0 ? 'r' : '');
+  }
 
   // Today's Gain — R13 in sheet. Field: "todayGain" | "R13" | "today_gain" | "todaysGain"
   var tg = n(s.todayGain !== undefined ? s.todayGain : (s.R13 !== undefined ? s.R13 : (s.today_gain !== undefined ? s.today_gain : s.todaysGain)));
