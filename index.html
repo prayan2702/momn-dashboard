@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Momn Portfolio Dashboard</title>
-<!-- Chart.js loaded at bottom -->
 <style>
 /* ── Reset & Base ─────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
@@ -38,8 +37,8 @@ a{color:var(--blue);text-decoration:none}
 .btn{font-family:var(--font);font-size:12px;font-weight:600;padding:0 14px;height:32px;border-radius:20px;border:1px solid var(--sep);background:var(--l2);color:var(--t2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
 .btn:hover{background:var(--l3);color:var(--t1);border-color:var(--sep)}
 
-/* ── KPI strip ─────────────────────────────────────────────────── */
-.kpi-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}
+/* ── KPI strip (5 cols) ─────────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:20px 22px;box-shadow:var(--card-shadow);transition:border-color .3s,transform .2s}
 .kpi:hover{border-color:var(--sep);transform:translateY(-2px)}
 .kpi-label{font-size:11px;font-weight:700;color:var(--t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
@@ -47,10 +46,24 @@ a{color:var(--blue);text-decoration:none}
 .kpi-sub{font-size:11px;font-weight:600;color:var(--t3);margin-top:6px;font-variant-numeric:tabular-nums}
 .g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}
 
+/* ── Nifty / index card ─────────────────────────────────────────── */
+.idx-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.idx-name{font-size:10px;font-weight:700;color:var(--t4);letter-spacing:.4px;text-transform:uppercase;min-width:60px}
+.idx-cmp{font-size:18px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;color:var(--t1)}
+.idx-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.idx-divider{height:1px;background:var(--sep2);margin:10px 0}
+
 /* ── Cards ─────────────────────────────────────────────────────── */
 .card{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:22px;box-shadow:var(--card-shadow);transition:border-color .3s}
-.card-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px}
+
+/* ── Benchmark chart legend ─────────────────────────────────────── */
+.bench-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px}
+.bench-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;transition:opacity .2s}
+.bench-item:hover{opacity:.7}
+.bench-line{width:16px;height:3px;border-radius:2px;flex-shrink:0}
+.bench-item.faded{opacity:.35}
 
 /* ── Performance heatmap ───────────────────────────────────────── */
 .perf-table{width:100%;border-collapse:collapse}
@@ -67,7 +80,7 @@ a{color:var(--blue);text-decoration:none}
 .sort-btn{font-size:11px;font-weight:600;padding:0 14px;height:30px;border-radius:20px;border:1px solid var(--sep2);background:var(--l1);color:var(--t3);cursor:pointer;transition:.2s;font-family:var(--font)}
 .sort-btn.on{background:rgba(10,209,166,0.12);color:var(--blue);border-color:rgba(10,209,166,0.3)}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--sep2);border-radius:14px;background:var(--l1)}
-table{width:100%;border-collapse:collapse;min-width:700px}
+table{width:100%;border-collapse:collapse;min-width:480px}
 thead th{background:var(--l2);font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:14px 16px;text-align:right;border-bottom:1px solid var(--sep2);cursor:pointer;white-space:nowrap}
 thead th:first-child,thead th:nth-child(2){text-align:left}
 thead th:hover{color:var(--blue)}
@@ -77,7 +90,7 @@ tbody tr:hover td{background:var(--l2)}
 tbody tr:last-child td{border-bottom:none}
 .cap{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
 .Large{background:rgba(10,209,166,.12);color:#0AD1A6}
-.Mid{background:rgba(0,208,158,.12);color:#00D09E}
+.Mid{background:rgba(54,162,235,.12);color:#36A2EB}
 .Small{background:rgba(255,159,10,.12);color:#FF9F0A}
 .Micro{background:rgba(251,54,64,.12);color:#FB3640}
 
@@ -127,21 +140,48 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- KPI Strip -->
+  <!-- KPI Strip — 5 cards -->
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Current Value</div><div class="kpi-val b" id="kpiVal">—</div><div class="kpi-sub" id="kpiInv">—</div></div>
-    <div class="kpi"><div class="kpi-label">Absolute Gains</div><div class="kpi-val" id="kpiGain">—</div><div class="kpi-sub" id="kpiGainPct">—</div></div>
+
+    <!-- Market Indices Card (NEW) -->
+    <div class="kpi">
+      <div class="kpi-label">Market Indices</div>
+      <div class="idx-row">
+        <span class="idx-name">NIFTY 50</span>
+        <span class="idx-cmp" id="kpiNifty50">—</span>
+        <span class="idx-chip" id="kpiNifty50Chg">—</span>
+      </div>
+      <div class="idx-divider"></div>
+      <div class="idx-row">
+        <span class="idx-name">SENSEX</span>
+        <span class="idx-cmp" id="kpiSensex">—</span>
+        <span class="idx-chip" id="kpiSensexChg">—</span>
+      </div>
+    </div>
+
+    <!-- XIRR -->
     <div class="kpi"><div class="kpi-label">XIRR</div><div class="kpi-val" id="kpiXirr">—</div><div class="kpi-sub">Since inception</div></div>
-    <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-val b" id="kpiNav">—</div><div class="kpi-sub" id="kpiDD">—</div></div>
+
+    <!-- NAV -->
+    <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-val b" id="kpiNav">—</div><div class="kpi-sub" id="kpiNavSub">—</div></div>
+
+    <!-- Today's Gain -->
     <div class="kpi"><div class="kpi-label">Today's Gain</div><div class="kpi-val" id="kpiToday">—</div><div class="kpi-sub" id="kpiStocks">—</div></div>
+
+    <!-- Drawdown -->
     <div class="kpi"><div class="kpi-label">Drawdown</div><div class="kpi-val r" id="kpiDD2">—</div><div class="kpi-sub" id="kpiDDMax">—</div></div>
+
   </div>
 
   <!-- Charts Row -->
   <div class="chart-row">
     <div class="card">
-      <div class="card-title">NAV — daily history</div>
-      <div style="position:relative;height:220px"><canvas id="navChart"></canvas></div>
+      <div class="card-title">
+        Performance Comparison
+        <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
+      </div>
+      <div class="bench-legend" id="benchLeg"></div>
+      <div style="position:relative;height:200px"><canvas id="navChart"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Sector allocation</div>
@@ -166,13 +206,12 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Holdings Table -->
+  <!-- Holdings Table — Symbol, Cap, CMP, Gain%, Today%, Pos% -->
   <div class="card">
     <div class="toolbar">
       <input class="search" type="text" id="q" placeholder="Search symbol..." oninput="renderTable()">
       <div class="sort-group">
-        <button class="sort-btn on" id="sb-gain" onclick="sortBy('gainPct')">Gain%</button>
-        <button class="sort-btn" id="sb-currentVal" onclick="sortBy('currentVal')">Value</button>
+        <button class="sort-btn on" id="sb-gainPct" onclick="sortBy('gainPct')">Gain%</button>
         <button class="sort-btn" id="sb-posSize" onclick="sortBy('posSize')">Position</button>
         <button class="sort-btn" id="sb-todayPct" onclick="sortBy('todayPct')">Today</button>
       </div>
@@ -182,10 +221,7 @@ tbody tr:last-child td{border-bottom:none}
         <thead id="holdThead"><tr>
           <th style="text-align:left" onclick="sortBy('symbol')">Symbol</th>
           <th style="text-align:left">Cap</th>
-          <th onclick="sortBy('cost')">Cost</th>
-          <th onclick="sortBy('qty')">Qty</th>
           <th onclick="sortBy('cmp')">CMP</th>
-          <th onclick="sortBy('currentVal')">Value</th>
           <th onclick="sortBy('gainPct')">Gain%</th>
           <th onclick="sortBy('todayPct')">Today%</th>
           <th onclick="sortBy('posSize')">Pos%</th>
@@ -195,7 +231,7 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Bottom: top gainers/losers + recent exits -->
+  <!-- Bottom: top gainers / losers -->
   <div class="two-col">
     <div class="card">
       <div class="card-title">Top 5 gainers</div>
@@ -210,94 +246,119 @@ tbody tr:last-child td{border-bottom:none}
 
 <script>
 // ================================================================
-// CONFIG — Apna Apps Script Web App URL yahan dalo
+// CONFIG
 // ================================================================
 var API_URL = 'https://script.google.com/macros/s/AKfycby2CnOK9Cu7420JySvB3COVGMYpZ0mrbMNIP3MhstkpPT1kzaB5_AjrMnueBoa04jiV/exec';
-// MOCK_MODE = true rakho jab tak API deploy na karo
 var MOCK_MODE = false;
 
 // ================================================================
-// MOCK DATA (APNE ACTUAL DATA SE REPLACE HOGA)
+// BENCHMARK SERIES CONFIG
+// ================================================================
+var BENCH_SERIES = [
+  { key:'momnPF',    label:'MOMN PF',     color:'#0AD1A6', width:2.5 },
+  { key:'nse50',     label:'NSE50',       color:'#36A2EB', width:1.5 },
+  { key:'nse500',    label:'NSE500',      color:'#FFCE56', width:1.5 },
+  { key:'bseSmlcap', label:'BSE-SMLCAP',  color:'#FF6384', width:1.5 },
+  { key:'n200Momn30',label:'N200 Momn30', color:'#9966FF', width:1.5 },
+  { key:'alpha50',   label:'ALPHA50',     color:'#FF9F40', width:1.5 }
+];
+
+// ================================================================
+// DISTINCT SECTOR COLOR PALETTE (7 clearly different colors)
+// ================================================================
+var SECTOR_COLORS = [
+  '#0AD1A6',  // teal
+  '#3B82F6',  // blue
+  '#F59E0B',  // amber
+  '#EC4899',  // pink
+  '#8B5CF6',  // purple
+  '#EF4444',  // red-orange
+  '#06B6D4',  // cyan
+  '#84CC16',  // lime
+  '#F97316',  // orange
+  '#A78BFA'   // lavender
+];
+
+// ================================================================
+// MOCK DATA (used when API not connected / as fallback)
 // ================================================================
 var MOCK = {
   portfolio: {
-    summary: { netCashflow:2904418, totalCurrentValue:2790092, absoluteGains:-114326, absoluteGainsPct:-3.94, xirr:-6.62, nav:106.33, maxNav:118.42, dd:-10.21, maxDD:-13.79, todayGain:47619, stockCount:30 },
+    summary: {
+      xirr: -5.22,
+      todayGain: -22094,
+      stockCount: 26
+    },
     holdings: [
-      {symbol:'CUPID',cost:35.4,qty:2225,cmp:76,todayPct:-6.45,currentVal:169100,gain:90290,gainPct:114.85,posSize:6.44,cap:'Micro',sector:'Consumer'},
-      {symbol:'MTARTECH',cost:2473,qty:37,cmp:3385,todayPct:-3.67,currentVal:125245,gain:33744,gainPct:36.88,posSize:4.76,cap:'Micro',sector:'Industrials'},
-      {symbol:'FORCEMOT',cost:15885.4,qty:6,cmp:20250,todayPct:-6.08,currentVal:121500,gain:26187,gainPct:27.48,posSize:4.62,cap:'Small',sector:'Industrials'},
-      {symbol:'NATIONALUM',cost:313.3,qty:278,cmp:386,todayPct:-5.55,currentVal:107308,gain:20336,gainPct:23.35,posSize:4.08,cap:'Mid',sector:'Materials'},
-      {symbol:'MCX',cost:2038.8,qty:40,cmp:2499,todayPct:-1.08,currentVal:99960,gain:18404,gainPct:22.57,posSize:3.80,cap:'Mid',sector:'Financial'},
-      {symbol:'LUMAXTECH',cost:1193.2,qty:74,cmp:1442,todayPct:3.55,currentVal:106708,gain:18414,gainPct:20.86,posSize:4.06,cap:'Micro',sector:'Consumer'},
-      {symbol:'SHRIRAMFIN',cost:851.5,qty:99,cmp:1006,todayPct:-2.50,currentVal:99594,gain:15286,gainPct:18.13,posSize:3.79,cap:'Large',sector:'Financial'},
-      {symbol:'LUMAXIND',cost:4145.1,qty:18,cmp:4831,todayPct:-2.43,currentVal:86958,gain:12338,gainPct:16.54,posSize:3.31,cap:'Micro',sector:'Consumer'},
-      {symbol:'SBIN',cost:971.9,qty:87,cmp:1046,todayPct:-3.61,currentVal:91002,gain:6449,gainPct:7.63,posSize:3.46,cap:'Large',sector:'Financial'},
-      {symbol:'VEDL',cost:656.6,qty:124,cmp:688,todayPct:-4.41,currentVal:85312,gain:3876,gainPct:4.76,posSize:3.24,cap:'Large',sector:'Materials'},
-      {symbol:'SEAMECLTD',cost:1271,qty:65,cmp:1321,todayPct:-1.42,currentVal:85865,gain:3263,gainPct:3.95,posSize:3.27,cap:'Micro',sector:'Industrials'},
-      {symbol:'TMB',cost:589.1,qty:138,cmp:606,todayPct:-3.48,currentVal:83628,gain:2333,gainPct:2.79,posSize:3.18,cap:'Micro',sector:'Financial'},
-      {symbol:'FEDERALBNK',cost:256.5,qty:328,cmp:263,todayPct:-2.72,currentVal:86264,gain:2116,gainPct:2.52,posSize:3.28,cap:'Mid',sector:'Financial'},
-      {symbol:'INDIANB',cost:878,qty:104,cmp:874,todayPct:-3.91,currentVal:90896,gain:-416,gainPct:-0.46,posSize:3.46,cap:'Large',sector:'Financial'},
-      {symbol:'LTF',cost:261,qty:370,cmp:258,todayPct:-2.90,currentVal:95460,gain:-1110,gainPct:-1.23,posSize:3.63,cap:'Mid',sector:'Financial'},
-      {symbol:'EICHERMOT',cost:6938,qty:14,cmp:6765,todayPct:-3.02,currentVal:94710,gain:-2422,gainPct:-2.49,posSize:3.60,cap:'Large',sector:'Consumer'},
-      {symbol:'GRMOVER',cost:157.5,qty:534,cmp:154,todayPct:-2.10,currentVal:82236,gain:-1869,gainPct:-2.22,posSize:3.13,cap:'Micro',sector:'Consumer'},
-      {symbol:'AUBANK',cost:950.7,qty:89,cmp:885,todayPct:-1.93,currentVal:78765,gain:-5861,gainPct:-6.93,posSize:2.99,cap:'Mid',sector:'Financial'},
-      {symbol:'ASHOKLEY',cost:184.5,qty:473,cmp:171,todayPct:-4.19,currentVal:80883,gain:-6409,gainPct:-7.34,posSize:3.08,cap:'Mid',sector:'Industrials'},
-      {symbol:'ABCAPITAL',cost:356,qty:237,cmp:310,todayPct:-3.09,currentVal:73470,gain:-10890,gainPct:-12.91,posSize:2.79,cap:'Mid',sector:'Financial'},
-      {symbol:'JKTYRE',cost:518.3,qty:158,cmp:413,todayPct:-4.20,currentVal:65254,gain:-16693,gainPct:-20.39,posSize:2.48,cap:'Micro',sector:'Consumer'},
-      {symbol:'CANBK',cost:150.2,qty:561,cmp:135,todayPct:-3.98,currentVal:75735,gain:-8574,gainPct:-10.19,posSize:2.88,cap:'Large',sector:'Financial'},
-      {symbol:'IOC',cost:179.5,qty:508,cmp:157,todayPct:-2.22,currentVal:79756,gain:-11205,gainPct:-12.28,posSize:3.03,cap:'Large',sector:'Energy'},
-      {symbol:'BHARATFORG',cost:1883.6,qty:47,cmp:1670,todayPct:-6.16,currentVal:78490,gain:-10039,gainPct:-11.34,posSize:2.98,cap:'Mid',sector:'Industrials'},
-      {symbol:'SANSERA',cost:2230.1,qty:40,cmp:1956,todayPct:-5.94,currentVal:78240,gain:-10964,gainPct:-12.29,posSize:2.97,cap:'Small',sector:'Consumer'},
-      {symbol:'KMEW',cost:1928,qty:45,cmp:1515,todayPct:-3.41,currentVal:68175,gain:-18585,gainPct:-21.43,posSize:2.59,cap:'Micro',sector:'Industrials'},
-      {symbol:'UJJIVANSFB',cost:61.1,qty:1326,cmp:51,todayPct:-4.14,currentVal:67626,gain:-13459,gainPct:-16.60,posSize:2.57,cap:'Micro',sector:'Financial'},
-      {symbol:'SILVERTUC',cost:140.6,qty:580,cmp:111,todayPct:-4.99,currentVal:64380,gain:-17108,gainPct:-20.92,posSize:2.45,cap:'Micro',sector:'Technology'},
-      {symbol:'APLAPOLLO',cost:2222.6,qty:40,cmp:1933,todayPct:-3.78,currentVal:77320,gain:-11572,gainPct:-13.02,posSize:2.94,cap:'Mid',sector:'Industrials'},
-      {symbol:'RMDRIP',cost:107.4,qty:769,cmp:40,todayPct:-5.00,currentVal:30760,gain:-51860,gainPct:-62.80,posSize:1.17,cap:'Micro',sector:'Industrials'},
+      {symbol:'CUPID',    cmp:76,   todayPct:-6.45, currentVal:169100, gainPct:114.85, posSize:6.44, cap:'Micro', sector:'Consumer Discretionary'},
+      {symbol:'MTARTECH', cmp:3385, todayPct:-3.67, currentVal:125245, gainPct:36.88,  posSize:4.76, cap:'Micro', sector:'Industrials'},
+      {symbol:'FORCEMOT', cmp:20250,todayPct:-6.08, currentVal:121500, gainPct:27.48,  posSize:4.62, cap:'Small', sector:'Industrials'},
+      {symbol:'NATIONALUM',cmp:386, todayPct:-5.55, currentVal:107308, gainPct:23.35,  posSize:4.08, cap:'Mid',   sector:'Materials'},
+      {symbol:'MCX',      cmp:2499, todayPct:-1.08, currentVal:99960,  gainPct:22.57,  posSize:3.80, cap:'Mid',   sector:'Financials'},
+      {symbol:'LUMAXTECH',cmp:1442, todayPct:3.55,  currentVal:106708, gainPct:20.86,  posSize:4.06, cap:'Micro', sector:'Consumer Discretionary'},
+      {symbol:'SHRIRAMFIN',cmp:1006,todayPct:-2.50, currentVal:99594,  gainPct:18.13,  posSize:3.79, cap:'Large', sector:'Financials'},
+      {symbol:'SBIN',     cmp:1046, todayPct:-3.61, currentVal:91002,  gainPct:7.63,   posSize:3.46, cap:'Large', sector:'Financials'},
+      {symbol:'FEDERALBNK',cmp:263, todayPct:-2.72, currentVal:86264,  gainPct:2.52,   posSize:3.28, cap:'Mid',   sector:'Financials'},
+      {symbol:'INDIANB',  cmp:874,  todayPct:-3.91, currentVal:90896,  gainPct:-0.46,  posSize:3.46, cap:'Large', sector:'Financials'},
+      {symbol:'AUBANK',   cmp:885,  todayPct:-1.93, currentVal:78765,  gainPct:-6.93,  posSize:2.99, cap:'Mid',   sector:'Financials'},
+      {symbol:'ASHOKLEY', cmp:171,  todayPct:-4.19, currentVal:80883,  gainPct:-7.34,  posSize:3.08, cap:'Mid',   sector:'Industrials'},
+      {symbol:'ABCAPITAL',cmp:310,  todayPct:-3.09, currentVal:73470,  gainPct:-12.91, posSize:2.79, cap:'Mid',   sector:'Financials'},
+      {symbol:'JKTYRE',   cmp:413,  todayPct:-4.20, currentVal:65254,  gainPct:-20.39, posSize:2.48, cap:'Micro', sector:'Consumer Discretionary'},
+      {symbol:'SILVERTUC',cmp:111,  todayPct:-4.99, currentVal:64380,  gainPct:-22.83, posSize:2.34, cap:'Micro', sector:'Technology'},
+      {symbol:'RMDRIP',   cmp:40,   todayPct:-5.00, currentVal:30760,  gainPct:-62.80, posSize:1.17, cap:'Micro', sector:'Industrials'},
     ]
   },
-  nav: (function(){
-    // Actual NAV data from sheet (row3 onwards, sorted by date)
-    // Format: [date, nav, maxNav, dd%]
-    var raw = [
-      ['2025-03-05',99.99,100.00,-0.01],['2025-03-06',100.38,100.38,0.00],
-      ['2025-03-07',101.31,101.31,0.00],['2025-03-08',101.31,101.31,0.00],
-      ['2025-03-09',101.31,101.31,0.00],['2025-03-10',100.34,101.31,-0.96],
-      ['2025-03-11',100.72,101.31,-0.58],['2025-03-12',100.96,101.31,-0.35],
-      ['2025-03-13',99.76,101.31,-1.53],['2025-03-14',99.76,101.31,-1.53],
-      ['2025-03-15',99.76,101.31,-1.53],['2025-03-16',99.76,101.31,-1.53],
-      ['2025-03-17',102.43,102.43,0.00],['2025-03-18',104.18,104.18,0.00],
-      ['2025-03-19',105.37,105.37,0.00],['2025-03-20',106.23,106.23,0.00],
-      ['2025-03-21',107.55,107.55,0.00],['2025-03-22',107.55,107.55,0.00],
-      ['2025-03-23',107.55,107.55,0.00],['2025-03-24',108.07,108.07,0.00],
-      ['2025-03-25',106.41,108.07,-1.54],['2025-03-26',105.59,108.07,-2.30],
-      ['2025-03-27',106.20,108.07,-1.73],['2025-03-28',105.93,108.07,-1.98],
-      ['2025-03-31',105.93,108.07,-1.98],['2025-04-01',104.62,108.07,-3.19],
-      ['2025-04-02',105.39,108.07,-2.48],['2025-04-03',104.08,108.07,-3.70],
-      ['2025-04-04',102.04,108.07,-5.58],['2025-04-07',97.98,108.07,-9.34],
-      ['2025-04-08',100.10,108.07,-7.38],['2025-04-09',98.40,108.07,-8.95],
-      ['2025-04-11',101.58,108.07,-6.01],['2025-04-30',104.03,108.07,-3.74],
-      ['2025-05-31',106.78,108.07,-1.19],['2025-06-30',112.52,112.52,0.00],
-      ['2025-07-31',111.29,112.52,-1.09],['2025-08-31',109.56,112.52,-2.63],
-      ['2025-09-30',109.43,112.52,-2.75],['2025-10-31',110.92,112.52,-1.42],
-      ['2025-11-30',111.20,112.52,-1.17],['2025-12-31',115.59,115.59,0.00],
-      ['2026-01-31',111.22,118.42,-6.08],['2026-02-28',114.99,118.42,-2.90],
-      ['2026-03-17',106.33,118.42,-10.21],['2026-03-18',106.33,118.42,-10.21]
-    ];
-    return raw.map(function(r){ return {date:r[0],nav:r[1],maxNav:r[2],dd:r[3]}; });
-  }()),
+  benchmarking: {
+    rows: (function(){
+      var raw = [
+        {d:'05-Mar-25',m:100.00, n5:100.00, n500:100.00, sml:100.00, mon:100.00, a50:100.00},
+        {d:'10-Mar-25',m:100.34, n5:100.55, n500:100.05, sml:100.24, mon:97.69,  a50:98.74},
+        {d:'17-Mar-25',m:102.43, n5:100.77, n500:100.16, sml:98.42,  mon:97.90,  a50:98.39},
+        {d:'24-Mar-25',m:108.07, n5:105.91, n500:106.33, sml:107.44, mon:104.15, a50:109.11},
+        {d:'07-Apr-25',m:97.98,  n5:99.21,  n500:99.26,  sml:98.73,  mon:98.29,  a50:98.79},
+        {d:'30-Apr-25',m:104.03, n5:108.94, n500:108.76, sml:106.43, mon:107.20, a50:108.47},
+        {d:'30-May-25',m:106.78, n5:110.80, n500:112.57, sml:117.68, mon:111.48, a50:116.72},
+        {d:'30-Jun-25',m:112.52, n5:114.24, n500:116.59, sml:122.80, mon:116.26, a50:122.41},
+        {d:'31-Jul-25',m:111.29, n5:110.88, n500:113.12, sml:119.95, mon:110.70, a50:118.50},
+        {d:'29-Aug-25',m:109.56, n5:109.35, n500:110.89, sml:115.52, mon:108.78, a50:111.88},
+        {d:'30-Sep-25',m:109.43, n5:110.18, n500:112.26, sml:117.19, mon:109.02, a50:112.19},
+        {d:'31-Oct-25',m:110.92, n5:115.15, n500:117.70, sml:120.97, mon:115.58, a50:116.17},
+        {d:'28-Nov-25',m:111.20, n5:117.31, n500:118.22, sml:116.87, mon:115.02, a50:118.52},
+        {d:'31-Dec-25',m:115.59, n5:116.98, n500:116.85, sml:115.69, mon:112.48, a50:114.16},
+        {d:'30-Jan-26',m:111.22, n5:113.36, n500:114.21, sml:null,   mon:113.55, a50:110.65},
+        {d:'12-Feb-26',m:118.42, n5:116.19, n500:117.26, sml:null,   mon:113.12, a50:115.34},
+        {d:'27-Feb-26',m:114.99, n5:112.72, n500:115.76, sml:null,   mon:101.82, a50:116.72},
+        {d:'17-Mar-26',m:104.82, n5:105.57, n500:106.13, sml:null,   mon:null,   a50:106.33},
+        {d:'27-Mar-26',m:102.44, n5:102.16, n500:106.03, sml:null,   mon:null,   a50:107.40},
+      ];
+      return raw.map(function(r){
+        return {date:r.d, momnPF:r.m, nse50:r.n5, nse500:r.n500,
+                bseSmlcap:r.sml, n200Momn30:r.mon, alpha50:r.a50};
+      });
+    }()),
+    currentNav: 102.44,
+    maxNav: 118.42,
+    currentDD: -13.50,
+    maxDD: -13.50
+  },
+  indexData: {
+    nifty:  { name:'NIFTY 50', cmp:22820, prevClose:23306, change:-487,  changePct:-2.09 },
+    sensex: { name:'SENSEX',   cmp:73583, prevClose:75273, change:-1690, changePct:-2.25 }
+  },
   performance: [
     {year:2025, months:[null,null,5.93,-1.79,2.64,5.37,-1.10,-1.55,-0.12,1.36,0.25,3.95], yearTotal:15.59},
-    {year:2026, months:[-3.78,3.38,-11.22,null,null,null,null,null,null,null,null,null], yearTotal:-11.68}
+    {year:2026, months:[-3.78,3.38,-11.22,null,null,null,null,null,null,null,null,null],    yearTotal:-11.68}
   ]
 };
 
 // ================================================================
 // STATE
 // ================================================================
-var holdings = [];
-var sortKey  = 'gainPct';
-var sortDir  = -1; // -1=desc, 1=asc
-var navChartInst = null, sectorChartInst = null;
+var holdings   = [];
+var sortKey    = 'gainPct';
+var sortDir    = -1;
+var benchChartInst = null, sectorChartInst = null;
+var hiddenSeries = {};
 
 // ================================================================
 // DATA LOAD
@@ -307,20 +368,16 @@ async function loadAll() {
   try {
     var data;
     if (MOCK_MODE || API_URL.includes('YOUR_DEPLOYMENT_ID')) {
-      // Mock mode OR API not configured yet
       data = MOCK;
-      if (API_URL.includes('YOUR_DEPLOYMENT_ID')) {
-        console.warn('Dashboard: API_URL not set — showing mock data. Set MOCK_MODE=false and update API_URL to connect live data.');
-      }
     } else {
       try {
-        var resp = await fetch(API_URL + '?action=all', { redirect: 'follow' });
+        var resp = await fetch(API_URL + '?action=all', { redirect:'follow' });
         var json = await resp.json();
-        if (!json.ok) throw new Error(json.error || 'API returned error');
+        if (!json.ok) throw new Error(json.error || 'API error');
         data = json.data;
       } catch(apiErr) {
-        console.error('API fetch failed, falling back to mock:', apiErr.message);
-        data = MOCK; // graceful fallback — show mock data on API failure
+        console.error('API fetch failed, using mock:', apiErr.message);
+        data = MOCK;
         setStatus('err', 'API error — showing cached data (' + apiErr.message + ')');
       }
     }
@@ -332,17 +389,16 @@ async function loadAll() {
 }
 
 function renderAll(data) {
-  // KPIs, table, perf — no Chart.js dependency, always run first
-  renderKPIs(data.portfolio.summary);
+  var bench = data.benchmarking || {};
+  renderKPIs(data.portfolio.summary, data.indexData, bench);
   renderPerf(data.performance);
   holdings = data.portfolio.holdings;
   renderTable();
   renderTopGL();
 
-  // Charts — need Chart.js; isolate so failures don't wipe KPIs
   if (typeof Chart !== 'undefined') {
-    try { renderNAV(data.nav); }    catch(e){ console.warn('NAV chart:', e.message); }
-    try { renderSector(data.portfolio.holdings); } catch(e){ console.warn('Sector chart:', e.message); }
+    try { renderBenchmarkChart(bench); }   catch(e){ console.warn('Bench chart:', e.message); }
+    try { renderSector(data.portfolio.holdings); } catch(e){ console.warn('Sector:', e.message); }
   } else {
     console.warn('Chart.js not loaded yet — charts skipped');
   }
@@ -361,51 +417,40 @@ function setStatus(cls, msg) {
 // RENDER: KPIs
 // ================================================================
 function n(v, fallback) {
-  // safe number: handles undefined, null, NaN, empty string
   var x = parseFloat(v);
   return isFinite(x) ? x : (fallback !== undefined ? fallback : 0);
 }
 
-function renderKPIs(s) {
+function renderKPIs(s, indexData, benchData) {
   if (!s) return;
 
-  // Current Value
-  var curVal = n(s.totalCurrentValue || s.currentValue || s.current_value);
-  set('kpiVal', '₹' + fmtL(curVal));
+  // ── Market Indices card ──
+  renderIndexCard(indexData);
 
-  // Net Cashflow — R9 in sheet. Field: "netCashflow" | "net_cashflow" | "R9" | "totalInvestment"
-  var cashflow = n(s.netCashflow || s.net_cashflow || s.R9 || s.totalInvestment);
-  set('kpiInv', 'Net Cashflow: ₹' + fmtL(cashflow));
-
-  // Absolute Gains — R12 in sheet. Field: "absoluteGains" | "R12" | "totalGain"
-  var ag  = n(s.absoluteGains !== undefined ? s.absoluteGains : (s.R12 !== undefined ? s.R12 : s.totalGain));
-  // Absolute Gains % — can come as "absoluteGainsPct" | "R12Pct" | "gainPct" | "absolute_gains_pct"
-  var agp = n(s.absoluteGainsPct !== undefined ? s.absoluteGainsPct : (s.absolute_gains_pct !== undefined ? s.absolute_gains_pct : s.gainPct));
-  var gainEl  = document.getElementById('kpiGain');
-  var gainPEl = document.getElementById('kpiGainPct');
-  gainEl.textContent  = (ag >= 0 ? '+' : '') + '₹' + fmtL(ag);
-  gainEl.className    = 'kpi-val ' + (ag >= 0 ? 'g' : 'r');
-  gainPEl.textContent = fmtPct(agp);
-  gainPEl.className   = 'kpi-sub ' + (agp >= 0 ? 'g' : 'r');
-
-  // XIRR — U3 in sheet. Field: "xirr" | "U3" | "xirrValue"
-  var xirrRaw = s.xirr !== undefined ? s.xirr : (s.U3 !== undefined ? s.U3 : (s.xirrValue !== undefined ? s.xirrValue : null));
-  var xirr    = (xirrRaw !== null && xirrRaw !== '' && !isNaN(+xirrRaw)) ? +xirrRaw : null;
-  var xirrEl  = document.getElementById('kpiXirr');
+  // ── XIRR ──
+  var xirrRaw = s.xirr !== undefined ? s.xirr : null;
+  var xirr = (xirrRaw !== null && xirrRaw !== '' && !isNaN(+xirrRaw)) ? +xirrRaw : null;
+  var xirrEl = document.getElementById('kpiXirr');
   xirrEl.textContent = xirr !== null ? fmtPct(xirr) : '—';
   xirrEl.className   = 'kpi-val ' + (xirr !== null && xirr >= 0 ? 'g' : 'r');
 
-  // NAV — U9 in sheet. Field: "nav" | "U9" | "navValue"
-  var navRaw = s.nav !== undefined ? s.nav : (s.U9 !== undefined ? s.U9 : s.navValue);
-  var nav = n(navRaw);
-  // maxNav & DD
-  var maxNav = n(s.maxNav || s.max_nav || s.maxNavValue);
-  var dd     = n(s.dd || s.drawdown);
-  set('kpiNav', nav > 0 ? nav.toFixed(2) : '—');
-  set('kpiDD',  'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
-  document.getElementById('kpiDD').className = 'kpi-sub';
+  // ── NAV (from benchData) ──
+  var nav    = benchData && benchData.currentNav ? n(benchData.currentNav) : n(s.nav);
+  var maxNav = benchData && benchData.maxNav     ? n(benchData.maxNav)     : n(s.maxNav);
+  set('kpiNav',    nav > 0 ? nav.toFixed(2) : '—');
+  set('kpiNavSub', 'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
+  document.getElementById('kpiNav').className = 'kpi-val b';
 
-  // Standalone Drawdown card — latest DD% from NAV sheet col I (last row)
+  // ── Today's Gain ──
+  var tg = n(s.todayGain !== undefined ? s.todayGain : (s.today_gain !== undefined ? s.today_gain : s.todaysGain));
+  var todayEl = document.getElementById('kpiToday');
+  todayEl.textContent = (tg >= 0 ? '+' : '') + '₹' + fmtL(tg);
+  todayEl.className   = 'kpi-val ' + (tg >= 0 ? 'g' : 'r');
+  set('kpiStocks', (s.stockCount || s.stock_count || 0) + ' stocks');
+
+  // ── Drawdown (from benchData) ──
+  var dd    = benchData && benchData.currentDD !== undefined ? n(benchData.currentDD) : n(s.dd);
+  var maxDD = benchData && benchData.maxDD     !== undefined ? n(benchData.maxDD)     : n(s.maxDD);
   var ddEl    = document.getElementById('kpiDD2');
   var ddMaxEl = document.getElementById('kpiDDMax');
   if (ddEl) {
@@ -413,64 +458,83 @@ function renderKPIs(s) {
     ddEl.className   = 'kpi-val ' + (dd < 0 ? 'r' : 'g');
   }
   if (ddMaxEl) {
-    var maxDD = n(s.maxDD);
     ddMaxEl.textContent = 'Max DD: ' + (maxDD !== 0 ? maxDD.toFixed(2) + '%' : '—');
     ddMaxEl.className   = 'kpi-sub ' + (maxDD < 0 ? 'r' : '');
   }
+}
 
-  // Today's Gain — R13 in sheet. Field: "todayGain" | "R13" | "today_gain" | "todaysGain"
-  var tg = n(s.todayGain !== undefined ? s.todayGain : (s.R13 !== undefined ? s.R13 : (s.today_gain !== undefined ? s.today_gain : s.todaysGain)));
-  var todayEl = document.getElementById('kpiToday');
-  todayEl.textContent = (tg >= 0 ? '+' : '') + '₹' + fmtL(tg);
-  todayEl.className   = 'kpi-val ' + (tg >= 0 ? 'g' : 'r');
-  set('kpiStocks', (s.stockCount || s.stock_count || 0) + ' stocks');
+function renderIndexCard(indexData) {
+  if (!indexData) return;
+
+  function setIdx(cmpId, chgId, data) {
+    var cmpEl = document.getElementById(cmpId);
+    var chgEl = document.getElementById(chgId);
+    if (!cmpEl || !chgEl) return;
+    if (!data) { cmpEl.textContent = '—'; chgEl.textContent = '—'; return; }
+    var cmp = n(data.cmp);
+    var pct = n(data.changePct);
+    cmpEl.textContent = cmp.toLocaleString('en-IN');
+    chgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    chgEl.style.background = pct >= 0 ? 'rgba(0,208,158,.12)' : 'rgba(251,54,64,.12)';
+    chgEl.style.color       = pct >= 0 ? '#00D09E' : '#FB3640';
+    chgEl.style.border      = pct >= 0 ? '1px solid rgba(0,208,158,.2)' : '1px solid rgba(251,54,64,.2)';
+  }
+
+  setIdx('kpiNifty50', 'kpiNifty50Chg', indexData.nifty);
+  setIdx('kpiSensex',  'kpiSensexChg',  indexData.sensex);
 }
 
 // ================================================================
-// RENDER: NAV Chart
+// RENDER: Benchmark Comparison Chart
 // ================================================================
-function renderNAV(navData) {
-  if (!navData || navData.length === 0) return;
-  // Strip trailing placeholder entries (nav===100 = not yet updated today)
-  while (navData.length > 1 && navData[navData.length - 1].nav === 100) {
-    navData = navData.slice(0, -1);
-  }
-  var vals   = navData.map(function(p){ return p.nav; });
-  var labels = navData.map(function(p){ return p.date || ''; });
-  var minVal = Math.min.apply(null, vals);
-  var maxVal = Math.max.apply(null, vals);
-  var pad    = (maxVal - minVal) * 0.05;
+function renderBenchmarkChart(benchData) {
+  if (!benchData || !benchData.rows || benchData.rows.length === 0) return;
 
-  if (navChartInst) navChartInst.destroy();
-  navChartInst = new Chart(document.getElementById('navChart'), {
+  var rows = benchData.rows.filter(function(r){ return r.momnPF && r.momnPF > 0; });
+  var labels = rows.map(function(r){ return r.date || ''; });
+
+  var allVals = [];
+  var datasets = [];
+
+  // Baseline reference
+  datasets.push({
+    label: '__baseline__',
+    data: rows.map(function(){ return 100; }),
+    borderColor: 'rgba(240,237,229,0.12)',
+    borderWidth: 1,
+    borderDash: [4,4],
+    fill: false,
+    pointRadius: 0,
+    tension: 0
+  });
+
+  BENCH_SERIES.forEach(function(s){
+    var vals = rows.map(function(r){ return r[s.key] !== null && r[s.key] !== undefined && r[s.key] !== '' ? +r[s.key] : null; });
+    vals.forEach(function(v){ if(v !== null) allVals.push(v); });
+    datasets.push({
+      label: s.label,
+      data: vals,
+      borderColor: s.color,
+      borderWidth: s.width,
+      fill: false,
+      pointRadius: 0,
+      tension: 0.2,
+      spanGaps: true,
+      hidden: !!hiddenSeries[s.key]
+    });
+  });
+
+  var minVal = allVals.length ? Math.min.apply(null, allVals) : 90;
+  var maxVal = allVals.length ? Math.max.apply(null, allVals) : 120;
+  var pad    = (maxVal - minVal) * 0.06;
+
+  if (benchChartInst) benchChartInst.destroy();
+  benchChartInst = new Chart(document.getElementById('navChart'), {
     type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        // Baseline 100 reference line
-        {
-          data: vals.map(function(){ return 100; }),
-          borderColor: 'rgba(240,237,229,0.12)',
-          borderWidth: 1,
-          borderDash: [4,4],
-          fill: false,
-          pointRadius: 0,
-          tension: 0
-        },
-        // NAV line
-        {
-          data: vals,
-          borderColor: '#0AD1A6',
-          borderWidth: 1.8,
-          fill: true,
-          backgroundColor: 'rgba(10,209,166,0.05)',
-          pointRadius: 0,
-          tension: 0.3
-        }
-      ]
-    },
+    data: { labels: labels, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
+      animation: { duration: 400 },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -478,13 +542,9 @@ function renderNAV(navData) {
           callbacks: {
             title: function(ctx){ return ctx[0].label || ''; },
             label: function(ctx){
-              if (ctx.datasetIndex === 0) return null; // hide baseline tooltip
-              var p = navData[ctx.dataIndex];
-              return [
-                'NAV: ' + ctx.parsed.y.toFixed(2),
-                'Max: ' + (p.maxNav||0).toFixed(2),
-                'DD: '  + (p.dd||0).toFixed(2) + '%'
-              ];
+              if (ctx.dataset.label === '__baseline__') return null;
+              var v = ctx.parsed.y;
+              return ctx.dataset.label + ': ' + (v !== null ? v.toFixed(2) : '—');
             }
           }
         }
@@ -497,24 +557,13 @@ function renderNAV(navData) {
             font: { size: 9, family: 'inherit' },
             maxRotation: 0,
             autoSkip: true,
-            maxTicksLimit: 12,
-            callback: function(val, index) {
-              var label = this.getLabelForValue(val);
-              if (!label) return '';
-              var parts = label.split('-');
-              if (parts.length < 3) return '';
-              var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-              var mo  = parseInt(parts[1], 10) - 1;
-              var yr  = parts[0].slice(2);
-              var day = parseInt(parts[2], 10);
-              return day <= 7 ? months[mo] + " '" + yr : '';
-            }
+            maxTicksLimit: 10
           },
           grid: { display: false },
           border: { display: false }
         },
         y: {
-          min: Math.max(Math.floor(minVal - pad), 85),
+          min: Math.max(Math.floor(minVal - pad), 70),
           grid: { color: 'rgba(240,237,229,0.04)' },
           ticks: {
             color: 'rgba(240,237,229,0.4)',
@@ -525,34 +574,75 @@ function renderNAV(navData) {
       }
     }
   });
+
+  // Build custom legend with toggle
+  var legEl = document.getElementById('benchLeg');
+  if (legEl) {
+    legEl.innerHTML = BENCH_SERIES.map(function(s){
+      var faded = hiddenSeries[s.key] ? ' faded' : '';
+      return '<span class="bench-item' + faded + '" onclick="toggleSeries(\'' + s.key + '\')" data-key="' + s.key + '">' +
+        '<span class="bench-line" style="background:' + s.color + ';height:' + (s.key==='momnPF'?'3px':'2px') + '"></span>' +
+        s.label + '</span>';
+    }).join('');
+  }
+}
+
+function toggleSeries(key) {
+  hiddenSeries[key] = !hiddenSeries[key];
+  // Update chart dataset visibility
+  if (benchChartInst) {
+    // datasets[0] = baseline, datasets[1-6] = series
+    var idx = BENCH_SERIES.findIndex(function(s){ return s.key === key; });
+    if (idx >= 0) {
+      var ds = benchChartInst.data.datasets[idx + 1];
+      if (ds) { ds.hidden = !!hiddenSeries[key]; benchChartInst.update(); }
+    }
+  }
+  // Update legend item style
+  document.querySelectorAll('.bench-item').forEach(function(el){
+    if (el.dataset.key === key) {
+      el.classList.toggle('faded', !!hiddenSeries[key]);
+    }
+  });
 }
 
 // ================================================================
-// RENDER: Sector donut
+// RENDER: Sector donut (with distinct colors)
 // ================================================================
 function renderSector(h) {
   var sectorMap = {};
-  h.forEach(function(hh){ sectorMap[hh.sector] = (sectorMap[hh.sector] || 0) + hh.currentVal; });
+  h.forEach(function(hh){ sectorMap[hh.sector] = (sectorMap[hh.sector] || 0) + (hh.currentVal || 0); });
   var sectors = Object.entries(sectorMap).sort(function(a,b){ return b[1] - a[1]; });
-  var totalV  = h.reduce(function(s,hh){ return s + hh.currentVal; }, 0);
-  var colors  = ['#0AD1A6','#00D09E','#FB3640','#FF9F0A','#38bdf8','#818cf8','#f472b6','#a78bfa'];
-  var legend  = document.getElementById('sectorLeg');
-  legend.innerHTML = sectors.map(function(s,i){
-    return '<span class="s-item"><span class="s-dot" style="background:' + colors[i % colors.length] + '"></span>'
-      + s[0].replace('Consumer','C.') + ' ' + Math.round(s[1]/totalV*100) + '%</span>';
+  var totalV  = h.reduce(function(s,hh){ return s + (hh.currentVal || 0); }, 0);
+
+  var legend = document.getElementById('sectorLeg');
+  legend.innerHTML = sectors.map(function(s, i){
+    var color = SECTOR_COLORS[i % SECTOR_COLORS.length];
+    var label = s[0].replace('Consumer Discretionary','C. Disc.').replace('Consumer Staples','C. Staples').replace('Financials','Financial');
+    return '<span class="s-item"><span class="s-dot" style="background:' + color + '"></span>' +
+      label.replace('Consumer','C.') + ' ' + (totalV > 0 ? Math.round(s[1]/totalV*100) : 0) + '%</span>';
   }).join('');
+
   if (sectorChartInst) sectorChartInst.destroy();
   sectorChartInst = new Chart(document.getElementById('sectorChart'), {
     type: 'doughnut',
     data: {
       labels: sectors.map(function(s){ return s[0]; }),
-      datasets: [{ data: sectors.map(function(s){ return s[1]; }), backgroundColor: colors, borderWidth: 0 }]
+      datasets: [{
+        data: sectors.map(function(s){ return s[1]; }),
+        backgroundColor: sectors.map(function(_, i){ return SECTOR_COLORS[i % SECTOR_COLORS.length]; }),
+        borderWidth: 2,
+        borderColor: 'rgba(10,12,16,0.8)'
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: function(ctx){ return ctx.label + ': ' + Math.round(ctx.parsed/totalV*100) + '%'; }
-      }}}
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: function(ctx){ return ctx.label + ': ' + (totalV > 0 ? Math.round(ctx.parsed/totalV*100) : 0) + '%'; }
+        }}
+      }
     }
   });
 }
@@ -576,7 +666,7 @@ function renderPerf(data) {
 }
 
 // ================================================================
-// RENDER: Holdings table
+// RENDER: Holdings table — Symbol | Cap | CMP | Gain% | Today% | Pos%
 // ================================================================
 function renderTable() {
   var q = document.getElementById('q').value.toLowerCase();
@@ -589,26 +679,21 @@ function renderTable() {
   document.getElementById('holdBody').innerHTML = rows.map(function(h){
     return '<tr>' +
       '<td style="font-weight:500">' + h.symbol + '</td>' +
-      '<td><span class="cap ' + h.cap + '">' + h.cap + '</span></td>' +
-      '<td>₹' + h.cost.toLocaleString('en-IN') + '</td>' +
-      '<td>' + h.qty.toLocaleString('en-IN') + '</td>' +
-      '<td>₹' + h.cmp.toLocaleString('en-IN') + '</td>' +
-      '<td>₹' + fmtL(h.currentVal) + '</td>' +
-      '<td style="color:' + (h.gainPct >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.gainPct) + '</td>' +
-      '<td style="color:' + (h.todayPct >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.todayPct) + '</td>' +
-      '<td>' + h.posSize.toFixed(2) + '%</td>' +
+      '<td><span class="cap ' + (h.cap||'') + '">' + (h.cap||'—') + '</span></td>' +
+      '<td>₹' + n(h.cmp).toLocaleString('en-IN') + '</td>' +
+      '<td style="color:' + (n(h.gainPct) >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.gainPct) + '</td>' +
+      '<td style="color:' + (n(h.todayPct) >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.todayPct) + '</td>' +
+      '<td>' + n(h.posSize).toFixed(2) + '%</td>' +
     '</tr>';
   }).join('');
 }
 
-var COL_KEYS = ['symbol','','cost','qty','cmp','currentVal','gainPct','todayPct','posSize'];
+var COL_KEYS = ['symbol','','cmp','gainPct','todayPct','posSize'];
 function sortBy(k) {
   if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
-  // update sort buttons
   document.querySelectorAll('.sort-btn').forEach(function(b){ b.classList.remove('on'); });
   var sbEl = document.getElementById('sb-' + k);
   if(sbEl) sbEl.classList.add('on');
-  // update header arrows
   var ths = document.querySelectorAll('#holdThead th');
   ths.forEach(function(th,i){
     th.textContent = th.textContent.replace(' ↑','').replace(' ↓','');
@@ -635,20 +720,20 @@ function renderTopGL() {
 // ================================================================
 // HELPERS
 // ================================================================
-function set(id, v){ document.getElementById(id).textContent = v; }
+function set(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; }
 
 function toggleTheme(){
   var isLight = document.documentElement.classList.toggle('light');
   document.getElementById('themeBtn').textContent = isLight ? '☾ Dark' : '☀ Light';
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  if(navChartInst) { navChartInst.destroy(); navChartInst=null; }
-  if(sectorChartInst){ sectorChartInst.destroy(); sectorChartInst=null; }
+  if(benchChartInst)  { benchChartInst.destroy();  benchChartInst=null; }
+  if(sectorChartInst) { sectorChartInst.destroy(); sectorChartInst=null; }
   loadAll();
 }
+
 function fmtL(n){
   if(n==null||isNaN(n)) return '—';
-  var a = Math.abs(n);
-  var sign = n < 0 ? '-' : '';
+  var a = Math.abs(n), sign = n < 0 ? '-' : '';
   if (a >= 10000000) return sign + (a/10000000).toFixed(2) + 'Cr';
   if (a >= 100000)   return sign + (a/100000).toFixed(2) + 'L';
   if (a >= 1000)     return sign + (a/1000).toFixed(1) + 'K';
@@ -656,8 +741,7 @@ function fmtL(n){
 }
 function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v).toFixed(2)+'%'; }
 
-// ── Boot sequence ────────────────────────────────────────
-// Step 1: Apply saved theme immediately
+// ── Boot ─────────────────────────────────────────────────
 (function(){
   if(localStorage.getItem('theme')==='light'){
     document.documentElement.classList.add('light');
@@ -666,24 +750,22 @@ function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v
   }
 })();
 
-// Step 2: Render mock data right now (no Chart.js needed) so page never shows zeros
-// Real API data will overwrite this once loaded
-renderAll({ portfolio: MOCK.portfolio, nav: MOCK.nav, performance: MOCK.performance });
+// Render mock immediately (no Chart.js needed for KPIs/table/perf)
+renderAll(MOCK);
 
-// Step 3: Load Chart.js, then fetch real API data
+// Load Chart.js → then fetch live data
 function startDashboard() {
-  loadAll();                               // fetch live data (or stay on mock if MOCK_MODE)
-  setInterval(loadAll, 5 * 60 * 1000);    // auto-refresh every 5 min
+  loadAll();
+  setInterval(loadAll, 5 * 60 * 1000);
 }
 var cjsScript = document.createElement('script');
 cjsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
 cjsScript.onload  = startDashboard;
 cjsScript.onerror = function(){
-  // Chart.js failed but data is already showing — only charts missing
-  console.warn('Chart.js failed to load — charts unavailable');
+  console.warn('Chart.js CDN failed — charts unavailable');
   setStatus('err', 'Charts unavailable (CDN blocked?) — data showing below');
 };
 document.head.appendChild(cjsScript);
-
-
 </script>
+</body>
+</html>
