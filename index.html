@@ -37,8 +37,8 @@ a{color:var(--blue);text-decoration:none}
 .btn{font-family:var(--font);font-size:12px;font-weight:600;padding:0 14px;height:32px;border-radius:20px;border:1px solid var(--sep);background:var(--l2);color:var(--t2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
 .btn:hover{background:var(--l3);color:var(--t1);border-color:var(--sep)}
 
-/* ── KPI strip (5 cols) ─────────────────────────────────────────── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+/* ── KPI strip — indices card gets 1.5× share ───────────────────── */
+.kpi-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .kpi{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:20px 22px;box-shadow:var(--card-shadow);transition:border-color .3s,transform .2s}
 .kpi:hover{border-color:var(--sep);transform:translateY(-2px)}
 .kpi-label{font-size:11px;font-weight:700;color:var(--t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
@@ -47,10 +47,11 @@ a{color:var(--blue);text-decoration:none}
 .g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}
 
 /* ── Nifty / index card ─────────────────────────────────────────── */
-.idx-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.idx-name{font-size:10px;font-weight:700;color:var(--t4);letter-spacing:.4px;text-transform:uppercase;min-width:60px}
+.idx-row{display:grid;grid-template-columns:70px 1fr auto auto;align-items:center;gap:6px}
+.idx-name{font-size:10px;font-weight:700;color:var(--t4);letter-spacing:.4px;text-transform:uppercase}
 .idx-cmp{font-size:18px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;color:var(--t1)}
-.idx-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.idx-pts{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.idx-chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .idx-divider{height:1px;background:var(--sep2);margin:10px 0}
 
 /* ── Cards ─────────────────────────────────────────────────────── */
@@ -115,7 +116,7 @@ tbody tr:last-child td{border-bottom:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:900px){
-  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .kpi-row{grid-template-columns:1fr 1fr}
   .chart-row{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
   .kpi-val{font-size:22px}
@@ -143,19 +144,21 @@ tbody tr:last-child td{border-bottom:none}
   <!-- KPI Strip — 5 cards -->
   <div class="kpi-row">
 
-    <!-- Market Indices Card (NEW) -->
+    <!-- Market Indices Card -->
     <div class="kpi">
       <div class="kpi-label">Market Indices</div>
       <div class="idx-row">
         <span class="idx-name">NIFTY 50</span>
         <span class="idx-cmp" id="kpiNifty50">—</span>
+        <span class="idx-pts" id="kpiNifty50Pts">—</span>
         <span class="idx-chip" id="kpiNifty50Chg">—</span>
       </div>
       <div class="idx-divider"></div>
       <div class="idx-row">
-        <span class="idx-name">SENSEX</span>
-        <span class="idx-cmp" id="kpiSensex">—</span>
-        <span class="idx-chip" id="kpiSensexChg">—</span>
+        <span class="idx-name">NIFTY 500</span>
+        <span class="idx-cmp" id="kpiNifty500">—</span>
+        <span class="idx-pts" id="kpiNifty500Pts">—</span>
+        <span class="idx-chip" id="kpiNifty500Chg">—</span>
       </div>
     </div>
 
@@ -181,7 +184,7 @@ tbody tr:last-child td{border-bottom:none}
         <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
       </div>
       <div class="bench-legend" id="benchLeg"></div>
-      <div style="position:relative;height:200px"><canvas id="navChart"></canvas></div>
+      <div style="position:relative;height:260px"><canvas id="navChart"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Sector allocation</div>
@@ -206,25 +209,25 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Holdings Table — Symbol, Cap, CMP, Gain%, Today%, Pos% -->
+  <!-- Holdings Table — Symbol | Today% | Gain% | CMP | Pos% | Cap -->
   <div class="card">
     <div class="toolbar">
       <input class="search" type="text" id="q" placeholder="Search symbol..." oninput="renderTable()">
       <div class="sort-group">
-        <button class="sort-btn on" id="sb-gainPct" onclick="sortBy('gainPct')">Gain%</button>
+        <button class="sort-btn" id="sb-gainPct" onclick="sortBy('gainPct')">Gain%</button>
+        <button class="sort-btn on" id="sb-todayPct" onclick="sortBy('todayPct')">Today</button>
         <button class="sort-btn" id="sb-posSize" onclick="sortBy('posSize')">Position</button>
-        <button class="sort-btn" id="sb-todayPct" onclick="sortBy('todayPct')">Today</button>
       </div>
     </div>
     <div class="tbl-wrap">
       <table>
         <thead id="holdThead"><tr>
           <th style="text-align:left" onclick="sortBy('symbol')">Symbol</th>
-          <th style="text-align:left">Cap</th>
-          <th onclick="sortBy('cmp')">CMP</th>
-          <th onclick="sortBy('gainPct')">Gain%</th>
           <th onclick="sortBy('todayPct')">Today%</th>
+          <th onclick="sortBy('gainPct')">Gain%</th>
+          <th onclick="sortBy('cmp')">CMP</th>
           <th onclick="sortBy('posSize')">Pos%</th>
+          <th style="text-align:left">Cap</th>
         </tr></thead>
         <tbody id="holdBody"></tbody>
       </table>
@@ -342,8 +345,8 @@ var MOCK = {
     maxDD: -13.50
   },
   indexData: {
-    nifty:  { name:'NIFTY 50', cmp:22820, prevClose:23306, change:-487,  changePct:-2.09 },
-    sensex: { name:'SENSEX',   cmp:73583, prevClose:75273, change:-1690, changePct:-2.25 }
+    nifty:   { name:'NIFTY 50',  cmp:22820, prevClose:23306, change:-487,  changePct:-2.09 },
+    nifty500:{ name:'NIFTY 500', cmp:21020, prevClose:21478, change:-458,  changePct:-2.13 }
   },
   performance: [
     {year:2025, months:[null,null,5.93,-1.79,2.64,5.37,-1.10,-1.55,-0.12,1.36,0.25,3.95], yearTotal:15.59},
@@ -355,7 +358,7 @@ var MOCK = {
 // STATE
 // ================================================================
 var holdings   = [];
-var sortKey    = 'gainPct';
+var sortKey    = 'todayPct';
 var sortDir    = -1;
 var benchChartInst = null, sectorChartInst = null;
 var hiddenSeries = {};
@@ -389,7 +392,10 @@ async function loadAll() {
 }
 
 function renderAll(data) {
-  var bench = data.benchmarking || {};
+  // Fallback to MOCK benchmarking if API data is missing or empty
+  var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
+    ? data.benchmarking : MOCK.benchmarking;
+
   renderKPIs(data.portfolio.summary, data.indexData, bench);
   renderPerf(data.performance);
   holdings = data.portfolio.holdings;
@@ -397,10 +403,8 @@ function renderAll(data) {
   renderTopGL();
 
   if (typeof Chart !== 'undefined') {
-    try { renderBenchmarkChart(bench); }   catch(e){ console.warn('Bench chart:', e.message); }
+    try { renderBenchmarkChart(bench); }           catch(e){ console.warn('Bench chart:', e.message); }
     try { renderSector(data.portfolio.holdings); } catch(e){ console.warn('Sector:', e.message); }
-  } else {
-    console.warn('Chart.js not loaded yet — charts skipped');
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
@@ -466,22 +470,28 @@ function renderKPIs(s, indexData, benchData) {
 function renderIndexCard(indexData) {
   if (!indexData) return;
 
-  function setIdx(cmpId, chgId, data) {
+  function setIdx(cmpId, ptsId, chgId, data) {
     var cmpEl = document.getElementById(cmpId);
+    var ptsEl = document.getElementById(ptsId);
     var chgEl = document.getElementById(chgId);
     if (!cmpEl || !chgEl) return;
-    if (!data) { cmpEl.textContent = '—'; chgEl.textContent = '—'; return; }
-    var cmp = n(data.cmp);
-    var pct = n(data.changePct);
+    if (!data) { cmpEl.textContent='—'; if(ptsEl) ptsEl.textContent=''; chgEl.textContent='—'; return; }
+    var cmp    = n(data.cmp);
+    var pts    = n(data.change);
+    var pct    = n(data.changePct);
+    var isUp   = pts >= 0;
     cmpEl.textContent = cmp.toLocaleString('en-IN');
-    chgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chgEl.style.background = pct >= 0 ? 'rgba(0,208,158,.12)' : 'rgba(251,54,64,.12)';
-    chgEl.style.color       = pct >= 0 ? '#00D09E' : '#FB3640';
-    chgEl.style.border      = pct >= 0 ? '1px solid rgba(0,208,158,.2)' : '1px solid rgba(251,54,64,.2)';
+    if (ptsEl) {
+      ptsEl.textContent = (isUp ? '+' : '') + Math.round(pts);
+      ptsEl.style.color = isUp ? '#00D09E' : '#FB3640';
+    }
+    chgEl.textContent = (isUp ? '+' : '') + pct.toFixed(2) + '%';
+    chgEl.style.background = isUp ? 'rgba(0,208,158,.12)' : 'rgba(251,54,64,.12)';
+    chgEl.style.color       = isUp ? '#00D09E' : '#FB3640';
   }
 
-  setIdx('kpiNifty50', 'kpiNifty50Chg', indexData.nifty);
-  setIdx('kpiSensex',  'kpiSensexChg',  indexData.sensex);
+  setIdx('kpiNifty50',  'kpiNifty50Pts',  'kpiNifty50Chg',  indexData.nifty);
+  setIdx('kpiNifty500', 'kpiNifty500Pts', 'kpiNifty500Chg', indexData.nifty500);
 }
 
 // ================================================================
@@ -563,7 +573,8 @@ function renderBenchmarkChart(benchData) {
           border: { display: false }
         },
         y: {
-          min: Math.max(Math.floor(minVal - pad), 70),
+          min: Math.max(Math.floor(minVal - pad * 2), 70),
+          max: Math.ceil(maxVal + pad),
           grid: { color: 'rgba(240,237,229,0.04)' },
           ticks: {
             color: 'rgba(240,237,229,0.4)',
@@ -666,7 +677,7 @@ function renderPerf(data) {
 }
 
 // ================================================================
-// RENDER: Holdings table — Symbol | Cap | CMP | Gain% | Today% | Pos%
+// RENDER: Holdings table — Symbol | Today% | Gain% | CMP | Pos% | Cap
 // ================================================================
 function renderTable() {
   var q = document.getElementById('q').value.toLowerCase();
@@ -679,16 +690,16 @@ function renderTable() {
   document.getElementById('holdBody').innerHTML = rows.map(function(h){
     return '<tr>' +
       '<td style="font-weight:500">' + h.symbol + '</td>' +
-      '<td><span class="cap ' + (h.cap||'') + '">' + (h.cap||'—') + '</span></td>' +
-      '<td>₹' + n(h.cmp).toLocaleString('en-IN') + '</td>' +
-      '<td style="color:' + (n(h.gainPct) >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.gainPct) + '</td>' +
       '<td style="color:' + (n(h.todayPct) >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.todayPct) + '</td>' +
+      '<td style="color:' + (n(h.gainPct) >= 0 ? '#00D09E' : '#FB3640') + '">' + fmtPct(h.gainPct) + '</td>' +
+      '<td>₹' + n(h.cmp).toLocaleString('en-IN') + '</td>' +
       '<td>' + n(h.posSize).toFixed(2) + '%</td>' +
+      '<td style="text-align:left"><span class="cap ' + (h.cap||'') + '">' + (h.cap||'—') + '</span></td>' +
     '</tr>';
   }).join('');
 }
 
-var COL_KEYS = ['symbol','','cmp','gainPct','todayPct','posSize'];
+var COL_KEYS = ['symbol','todayPct','gainPct','cmp','posSize','cap'];
 function sortBy(k) {
   if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
   document.querySelectorAll('.sort-btn').forEach(function(b){ b.classList.remove('on'); });
@@ -750,11 +761,15 @@ function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v
   }
 })();
 
-// Render mock immediately (no Chart.js needed for KPIs/table/perf)
+// Step 1: Render mock data immediately (KPIs, table, perf — no Chart.js needed)
 renderAll(MOCK);
 
-// Load Chart.js → then fetch live data
+// Step 2: Load Chart.js
 function startDashboard() {
+  // Render mock charts immediately so canvas is never blank
+  try { renderBenchmarkChart(MOCK.benchmarking); } catch(e){}
+  try { renderSector(MOCK.portfolio.holdings); }   catch(e){}
+  // Then fetch live data (will re-render everything)
   loadAll();
   setInterval(loadAll, 5 * 60 * 1000);
 }
