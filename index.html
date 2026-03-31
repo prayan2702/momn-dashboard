@@ -339,10 +339,10 @@ var MOCK = {
                 bseSmlcap:r.sml, n200Momn30:r.mon, alpha50:r.a50};
       });
     }()),
-    currentNav: 102.44,
+    currentNav: 99.82,
     maxNav: 118.42,
-    currentDD: -13.50,
-    maxDD: -13.50
+    currentDD: -15.71,
+    maxDD: -16.06
   },
   indexData: {
     nifty:   { name:'NIFTY 50',  cmp:22820, prevClose:23306, change:-487,  changePct:-2.09 },
@@ -438,14 +438,20 @@ function renderKPIs(s, indexData, benchData) {
   xirrEl.textContent = xirr !== null ? fmtPct(xirr) : '—';
   xirrEl.className   = 'kpi-val ' + (xirr !== null && xirr >= 0 ? 'g' : 'r');
 
-  // ── NAV — benchData primary, portfolio summary fallback, mock last ──
-  var nav    = n(benchData && benchData.currentNav ? benchData.currentNav
-               : (s.nav    ? s.nav    : 0));
-  var maxNav = n(benchData && benchData.maxNav     ? benchData.maxNav
-               : (s.maxNav ? s.maxNav : 0));
-  // Guard: if nav === 102.44 (mock value) AND it came from benchData, prefer s.nav
-  if (nav > 0 && nav === 102.44 && s.nav && s.nav !== 102.44) nav = n(s.nav);
-  if (maxNav > 0 && maxNav === 118.42 && s.maxNav && s.maxNav !== 118.42) maxNav = n(s.maxNav);
+  // ── NAV — strictly from benchData (most accurate, computed from Benchmarking sheet)
+  //   s.nav from Portfolio/NAV sheet is often 100 (placeholder) — IGNORE if bench has real data
+  var nav    = 0, maxNav = 0;
+  if (benchData && benchData.currentNav && benchData.currentNav !== 100) {
+    nav    = n(benchData.currentNav);
+    maxNav = n(benchData.maxNav);
+  } else if (s.nav && s.nav !== 100) {
+    // s.nav=100 is a NAV sheet placeholder row — skip unless bench also has nothing
+    nav    = n(s.nav);
+    maxNav = n(s.maxNav);
+  } else if (benchData && benchData.currentNav) {
+    nav    = n(benchData.currentNav);   // even if 100, better than nothing
+    maxNav = n(benchData.maxNav);
+  }
   set('kpiNav',    nav > 0 ? nav.toFixed(2) : '—');
   set('kpiNavSub', 'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
   document.getElementById('kpiNav').className = 'kpi-val b';
@@ -457,11 +463,16 @@ function renderKPIs(s, indexData, benchData) {
   todayEl.className   = 'kpi-val ' + (tg >= 0 ? 'g' : 'r');
   set('kpiStocks', (s.stockCount || s.stock_count || 0) + ' stocks');
 
-  // ── Drawdown — benchData primary, portfolio summary fallback ──
-  var dd    = n(benchData && benchData.currentDD !== undefined && benchData.currentDD !== 0
-               ? benchData.currentDD : (s.dd    ? s.dd    : 0));
-  var maxDD = n(benchData && benchData.maxDD     !== undefined && benchData.maxDD     !== 0
-               ? benchData.maxDD    : (s.maxDD  ? s.maxDD : 0));
+  // ── Drawdown — strictly from benchData (most accurate)
+  //   s.dd may be stale or wrong — benchData computed from latest Benchmarking sheet rows
+  var dd    = 0, maxDD = 0;
+  if (benchData && benchData.currentDD && benchData.currentDD !== 0) {
+    dd    = n(benchData.currentDD);
+    maxDD = n(benchData.maxDD);
+  } else if (s.dd) {
+    dd    = n(s.dd);
+    maxDD = n(s.maxDD);
+  }
   var ddEl    = document.getElementById('kpiDD2');
   var ddMaxEl = document.getElementById('kpiDDMax');
   if (ddEl) {
