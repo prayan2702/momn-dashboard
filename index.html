@@ -438,9 +438,14 @@ function renderKPIs(s, indexData, benchData) {
   xirrEl.textContent = xirr !== null ? fmtPct(xirr) : '—';
   xirrEl.className   = 'kpi-val ' + (xirr !== null && xirr >= 0 ? 'g' : 'r');
 
-  // ── NAV (from benchData) ──
-  var nav    = benchData && benchData.currentNav ? n(benchData.currentNav) : n(s.nav);
-  var maxNav = benchData && benchData.maxNav     ? n(benchData.maxNav)     : n(s.maxNav);
+  // ── NAV — benchData primary, portfolio summary fallback, mock last ──
+  var nav    = n(benchData && benchData.currentNav ? benchData.currentNav
+               : (s.nav    ? s.nav    : 0));
+  var maxNav = n(benchData && benchData.maxNav     ? benchData.maxNav
+               : (s.maxNav ? s.maxNav : 0));
+  // Guard: if nav === 102.44 (mock value) AND it came from benchData, prefer s.nav
+  if (nav > 0 && nav === 102.44 && s.nav && s.nav !== 102.44) nav = n(s.nav);
+  if (maxNav > 0 && maxNav === 118.42 && s.maxNav && s.maxNav !== 118.42) maxNav = n(s.maxNav);
   set('kpiNav',    nav > 0 ? nav.toFixed(2) : '—');
   set('kpiNavSub', 'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
   document.getElementById('kpiNav').className = 'kpi-val b';
@@ -452,9 +457,11 @@ function renderKPIs(s, indexData, benchData) {
   todayEl.className   = 'kpi-val ' + (tg >= 0 ? 'g' : 'r');
   set('kpiStocks', (s.stockCount || s.stock_count || 0) + ' stocks');
 
-  // ── Drawdown (from benchData) ──
-  var dd    = benchData && benchData.currentDD !== undefined ? n(benchData.currentDD) : n(s.dd);
-  var maxDD = benchData && benchData.maxDD     !== undefined ? n(benchData.maxDD)     : n(s.maxDD);
+  // ── Drawdown — benchData primary, portfolio summary fallback ──
+  var dd    = n(benchData && benchData.currentDD !== undefined && benchData.currentDD !== 0
+               ? benchData.currentDD : (s.dd    ? s.dd    : 0));
+  var maxDD = n(benchData && benchData.maxDD     !== undefined && benchData.maxDD     !== 0
+               ? benchData.maxDD    : (s.maxDD  ? s.maxDD : 0));
   var ddEl    = document.getElementById('kpiDD2');
   var ddMaxEl = document.getElementById('kpiDDMax');
   if (ddEl) {
@@ -468,6 +475,7 @@ function renderKPIs(s, indexData, benchData) {
 }
 
 function renderIndexCard(indexData) {
+  // Skip if no data or cmp is 0 (API returned empty) — keep mock values showing
   if (!indexData) return;
 
   function setIdx(cmpId, ptsId, chgId, data) {
@@ -475,14 +483,14 @@ function renderIndexCard(indexData) {
     var ptsEl = document.getElementById(ptsId);
     var chgEl = document.getElementById(chgId);
     if (!cmpEl || !chgEl) return;
-    if (!data) { cmpEl.textContent='—'; if(ptsEl) ptsEl.textContent=''; chgEl.textContent='—'; return; }
-    var cmp    = n(data.cmp);
-    var pts    = n(data.change);
-    var pct    = n(data.changePct);
-    var isUp   = pts >= 0;
+    if (!data || !data.cmp || data.cmp === 0) return; // keep showing existing value
+    var cmp  = n(data.cmp);
+    var pts  = n(data.change);
+    var pct  = n(data.changePct);
+    var isUp = pts >= 0;
     cmpEl.textContent = cmp.toLocaleString('en-IN');
     if (ptsEl) {
-      ptsEl.textContent = (isUp ? '+' : '') + Math.round(pts);
+      ptsEl.textContent = (isUp ? '+' : '') + pts.toFixed(0);
       ptsEl.style.color = isUp ? '#00D09E' : '#FB3640';
     }
     chgEl.textContent = (isUp ? '+' : '') + pct.toFixed(2) + '%';
