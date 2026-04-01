@@ -1,142 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momn Portfolio</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin:0;
+  background:#05070d;
+  color:#e6edf3;
+  font-family:system-ui;
+}
+.container { padding:20px; }
+.card {
+  background:#0b1220;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:16px;
+}
+.title { font-size:22px; font-weight:700; margin-bottom:10px; }
+.green { color:#00ffa3; }
+.red { color:#ff4d4f; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title">📈 Momn Portfolio</div>
+
+<div class="grid">
+  <div class="card">NIFTY: <span id="nifty"></span></div>
+  <div class="card">XIRR: <span id="xirr"></span></div>
+  <div class="card">NAV: <span id="nav"></span></div>
+  <div class="card">TODAY: <span id="today"></span></div>
+  <div class="card">DD: <span id="dd"></span></div>
+</div>
+
+<br>
+
+<div class="card">
+  <canvas id="chart"></canvas>
+</div>
+
+</div>
+
 <script>
-// ================================================================
-// CONFIG
-// ================================================================
+
+// 🔴 PASTE YOUR WEB APP URL
 const API_URL = "https://script.google.com/macros/s/AKfycbyMZVltPoHDGEc6nf9pF_8jis_FK8WDmnAgH3ghETP1LA4WX_fksu3MqSal6m3LGy8m8Q/exec";
-const REFRESH_INTERVAL = 60 * 1000; // 1 min
 
-let holdings = [];
-let lastData = null;
+let chart;
 
-// ================================================================
-// ⚡ INSTANT LOAD (from cache)
-// ================================================================
-(function init() {
-  const cached = localStorage.getItem("dashboard_cache");
-  if (cached) {
-    try {
-      const data = JSON.parse(cached);
-      renderAll(data);
-      setStatus("ok", "Cached data loaded");
-    } catch(e){}
-  }
-})();
+// ================= SAFE HELPERS =================
+function safeArray(a){ return Array.isArray(a)?a:[]; }
+function safe(v,d=0){ return (v===undefined||v===null||isNaN(v))?d:v; }
 
-// ================================================================
-// 🚀 MAIN FETCH (NO DELAY)
-// ================================================================
-async function fetchData() {
+// ================= FETCH =================
+async function loadData(){
   try {
-    const resp = await fetch(API_URL + "?action=all&t=" + Date.now());
+    const res = await fetch(API_URL);
+    const json = await res.json();
 
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-
-    const json = await resp.json();
-
-    if (!json.ok || !json.data) {
-      throw new Error(json.error || "Invalid API");
+    if(!json.ok){
+      console.error(json.error);
+      return;
     }
 
-    const newData = json.data;
+    const data = json.data;
 
-    // 💾 Cache store
-    localStorage.setItem("dashboard_cache", JSON.stringify(newData));
+    updateCards(data);
+    updateChart(data);
 
-    // ⚡ Smart update (no flicker)
-    if (!lastData) {
-      renderAll(newData);
-    } else {
-      updateLive(newData);
+  } catch(e){
+    console.error("FETCH ERROR", e);
+  }
+}
+
+// ================= CARDS =================
+function updateCards(d){
+
+  const nifty = d.indexData?.nifty || {};
+  document.getElementById("nifty").innerHTML =
+    `${safe(nifty.cmp)} (${safe(nifty.changePct)}%)`;
+
+  const sum = d.portfolio?.summary || {};
+
+  document.getElementById("xirr").innerHTML =
+    `<span class="${sum.xirr>=0?'green':'red'}">${safe(sum.xirr)}%</span>`;
+
+  document.getElementById("nav").innerHTML =
+    safe(sum.currentNav);
+
+  document.getElementById("today").innerHTML =
+    `<span class="${sum.todayGain>=0?'green':'red'}">${safe(sum.todayGain)}</span>`;
+
+  document.getElementById("dd").innerHTML =
+    safe(sum.currentDD);
+}
+
+// ================= CHART =================
+function updateChart(d){
+
+  const bench = safeArray(d.benchmarking?.rows);
+
+  const labels = bench.map(x => x.date);
+  const nav = bench.map(x => safe(x.momnPF));
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Portfolio",
+        data: nav,
+        borderColor: "#00ffa3",
+        tension:0.3
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:"#aaa"}},
+        y:{ticks:{color:"#aaa"}}
+      }
     }
-
-    lastData = newData;
-
-    setStatus("ok", "Live " + new Date().toLocaleTimeString("en-IN"));
-
-  } catch (e) {
-    console.error("API ERROR:", e);
-    setStatus("err", e.message);
-  }
+  });
 }
 
-// ================================================================
-// 🔁 SMART LIVE UPDATE (NO FULL RELOAD)
-// ================================================================
-function updateLive(data) {
-  if (!data) return;
+// ================= AUTO REFRESH =================
+loadData();
+setInterval(loadData, 5000);
 
-  // NAV update
-  if (data.portfolio?.summary?.currentNav) {
-    const nav = data.portfolio.summary.currentNav.toFixed(2);
-    document.getElementById("kpiNav").textContent = nav;
-  }
-
-  // Today's gain update
-  if (data.portfolio?.summary?.todayGain !== undefined) {
-    const tg = data.portfolio.summary.todayGain;
-    const el = document.getElementById("kpiToday");
-    el.textContent = (tg >= 0 ? "+" : "") + "₹" + fmtL(tg);
-    el.className = "kpi-val " + (tg >= 0 ? "g" : "r");
-  }
-
-  // Drawdown
-  if (data.portfolio?.summary?.currentDD) {
-    document.getElementById("kpiDD2").textContent =
-      data.portfolio.summary.currentDD.toFixed(2) + "%";
-  }
-}
-
-// ================================================================
-// 🧠 FULL RENDER (FIRST TIME)
-// ================================================================
-function renderAll(data) {
-  if (!data) return;
-
-  renderKPIs(data.portfolio.summary, data.indexData, data.benchmarking);
-  renderPerf(data.performance || []);
-
-  holdings = data.portfolio.holdings || [];
-  renderTable();
-  renderTopGL();
-
-  if (typeof Chart !== "undefined") {
-    renderBenchmarkChart(data.benchmarking);
-    renderSector(holdings);
-  }
-
-  document.getElementById("overlay").classList.add("hide");
-}
-
-// ================================================================
-// STATUS
-// ================================================================
-function setStatus(type, msg) {
-  const el = document.getElementById("status");
-  el.className = type;
-  el.textContent = msg;
-}
-
-// ================================================================
-// AUTO REFRESH ENGINE
-// ================================================================
-function startLive() {
-  fetchData();
-  setInterval(fetchData, REFRESH_INTERVAL);
-}
-
-// ================================================================
-// LOAD CHART.JS + START
-// ================================================================
-const script = document.createElement("script");
-script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
-
-script.onload = () => {
-  startLive();
-};
-
-script.onerror = () => {
-  setStatus("err", "Chart load failed");
-};
-
-document.head.appendChild(script);
 </script>
+
+</body>
+</html>
