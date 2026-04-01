@@ -392,6 +392,11 @@ async function loadAll() {
 }
 
 function renderAll(data) {
+  // Debug: log what API actually returned
+  console.log('API response - benchmarking rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 'MISSING');
+  console.log('API response - indexData nifty cmp:', data.indexData && data.indexData.nifty ? data.indexData.nifty.cmp : 'MISSING');
+  console.log('API response - summary:', data.portfolio && data.portfolio.summary ? JSON.stringify(data.portfolio.summary) : 'MISSING');
+
   // Fallback to MOCK benchmarking if API data is missing or empty
   var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
     ? data.benchmarking : MOCK.benchmarking;
@@ -438,19 +443,19 @@ function renderKPIs(s, indexData, benchData) {
   xirrEl.textContent = xirr !== null ? fmtPct(xirr) : '—';
   xirrEl.className   = 'kpi-val ' + (xirr !== null && xirr >= 0 ? 'g' : 'r');
 
-  // ── NAV — strictly from benchData (most accurate, computed from Benchmarking sheet)
-  //   s.nav from Portfolio/NAV sheet is often 100 (placeholder) — IGNORE if bench has real data
-  var nav    = 0, maxNav = 0;
-  if (benchData && benchData.currentNav && benchData.currentNav !== 100) {
+  // ── NAV card — priority: s.currentNav (from NAV sheet, most up-to-date)
+  //   then benchData.currentNav (may be 1 day old), then s.nav (fallback)
+  var nav = 0, maxNav = 0;
+  if (s.currentNav && s.currentNav !== 100 && s.currentNav > 0) {
+    // Code.gs already resolved best NAV value from NAV sheet
+    nav    = n(s.currentNav);
+    maxNav = n(s.maxNav || benchData && benchData.maxNav || 0);
+  } else if (benchData && benchData.currentNav && benchData.currentNav !== 100) {
     nav    = n(benchData.currentNav);
     maxNav = n(benchData.maxNav);
   } else if (s.nav && s.nav !== 100) {
-    // s.nav=100 is a NAV sheet placeholder row — skip unless bench also has nothing
     nav    = n(s.nav);
-    maxNav = n(s.maxNav);
-  } else if (benchData && benchData.currentNav) {
-    nav    = n(benchData.currentNav);   // even if 100, better than nothing
-    maxNav = n(benchData.maxNav);
+    maxNav = n(s.maxNav || 0);
   }
   set('kpiNav',    nav > 0 ? nav.toFixed(2) : '—');
   set('kpiNavSub', 'Max NAV: ' + (maxNav > 0 ? maxNav.toFixed(2) : '—'));
@@ -463,15 +468,17 @@ function renderKPIs(s, indexData, benchData) {
   todayEl.className   = 'kpi-val ' + (tg >= 0 ? 'g' : 'r');
   set('kpiStocks', (s.stockCount || s.stock_count || 0) + ' stocks');
 
-  // ── Drawdown — strictly from benchData (most accurate)
-  //   s.dd may be stale or wrong — benchData computed from latest Benchmarking sheet rows
-  var dd    = 0, maxDD = 0;
-  if (benchData && benchData.currentDD && benchData.currentDD !== 0) {
+  // ── Drawdown — priority: s.currentDD (resolved by Code.gs from NAV sheet)
+  var dd = 0, maxDD = 0;
+  if (s.currentDD && s.currentDD !== 0) {
+    dd    = n(s.currentDD);
+    maxDD = n(s.maxDD || benchData && benchData.maxDD || 0);
+  } else if (benchData && benchData.currentDD && benchData.currentDD !== 0) {
     dd    = n(benchData.currentDD);
     maxDD = n(benchData.maxDD);
   } else if (s.dd) {
     dd    = n(s.dd);
-    maxDD = n(s.maxDD);
+    maxDD = n(s.maxDD || 0);
   }
   var ddEl    = document.getElementById('kpiDD2');
   var ddMaxEl = document.getElementById('kpiDDMax');
