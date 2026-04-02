@@ -109,10 +109,26 @@ tbody tr:last-child td{border-bottom:none}
 .s-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--t3)}
 .s-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
 
-/* ── Loading overlay ────────────────────────────────────────────── */
-#overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;transition:opacity .4s}
-#overlay.hide{opacity:0;pointer-events:none}
-.spinner{width:32px;height:32px;border:2px solid var(--sep);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+/* ── Loading overlay — blur glass ──────────────────────────────── */
+#overlay{
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transition:opacity .35s ease, backdrop-filter .35s ease;
+}
+#overlay.hide{opacity:0;pointer-events:none;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
+.spinner{
+  width:40px;height:40px;
+  border:2.5px solid rgba(10,209,166,0.2);
+  border-top-color:#0AD1A6;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+.overlay-txt{
+  font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(240,237,229,0.6);font-family:var(--font);
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:900px){
@@ -129,7 +145,7 @@ tbody tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<div id="overlay"><div class="spinner"></div></div>
+<div id="overlay"><div class="spinner"></div><span class="overlay-txt" id="overlayTxt">Loading...</span></div>
 
 <div class="container">
   <div class="topbar">
@@ -368,6 +384,9 @@ var hiddenSeries = {};
 // ================================================================
 async function loadAll() {
   setStatus('loading', 'Loading...');
+  var ovTxt = document.getElementById('overlayTxt');
+  if (ovTxt) ovTxt.textContent = 'Loading...';
+  document.getElementById('overlay').classList.remove('hide');
   try {
     var data;
     if (MOCK_MODE || API_URL.includes('YOUR_DEPLOYMENT_ID')) {
@@ -381,13 +400,14 @@ async function loadAll() {
       } catch(apiErr) {
         console.error('API fetch failed, using mock:', apiErr.message);
         data = MOCK;
-        setStatus('err', 'API error — showing cached data (' + apiErr.message + ')');
+        setStatus('err', 'API error — showing cached data');
       }
     }
     renderAll(data);
   } catch(e) {
     setStatus('err', 'Error: ' + e.message);
-    document.getElementById('overlay').classList.add('hide');
+    var ovElErr = document.getElementById('overlay');
+    if (ovElErr) ovElErr.classList.add('hide');
   }
 }
 
@@ -413,7 +433,8 @@ function renderAll(data) {
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
-  document.getElementById('overlay').classList.add('hide');
+  var ovEl = document.getElementById('overlay');
+  if (ovEl) ovEl.classList.add('hide');
 }
 
 function setStatus(cls, msg) {
@@ -787,16 +808,14 @@ function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v
   }
 })();
 
-// Step 1: Render mock data immediately (KPIs, table, perf — no Chart.js needed)
-renderAll(MOCK);
+// Step 1: Populate holdings with MOCK silently (for table structure),
+// but keep overlay VISIBLE so user never sees mock data.
+// renderAll(MOCK) is NOT called here — overlay stays up until real API data arrives.
+holdings = MOCK.portfolio.holdings; // silent, no render
 
-// Step 2: Load Chart.js
+// Step 2: Load Chart.js then fetch real data
 function startDashboard() {
-  // Render mock charts immediately so canvas is never blank
-  try { renderBenchmarkChart(MOCK.benchmarking); } catch(e){}
-  try { renderSector(MOCK.portfolio.holdings); }   catch(e){}
-  // Then fetch live data (will re-render everything)
-  loadAll();
+  loadAll();  // fetch real API data; overlay hides when done
   setInterval(loadAll, 5 * 60 * 1000);
 }
 var cjsScript = document.createElement('script');
