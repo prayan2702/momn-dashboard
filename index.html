@@ -67,10 +67,31 @@ a{color:var(--blue);text-decoration:none}
 .bench-item.faded{opacity:.35}
 
 /* ── Performance heatmap ───────────────────────────────────────── */
-.perf-table{width:100%;border-collapse:collapse}
-.perf-table th{font-size:10px;font-weight:700;color:var(--t4);padding:6px 8px;text-align:center;text-transform:uppercase;letter-spacing:.4px}
-.perf-table td{font-size:11px;font-weight:600;text-align:center;padding:6px 5px;border-radius:5px;font-variant-numeric:tabular-nums}
-.perf-table .yr-col{text-align:left;color:var(--t3);font-size:11px;padding-right:10px;font-weight:700}
+.perf-table{width:100%;border-collapse:separate;border-spacing:4px 6px}
+.perf-table th{
+  font-size:11px;font-weight:700;color:var(--t3);padding:4px 6px;
+  text-align:center;text-transform:capitalize;letter-spacing:.1px;white-space:nowrap;
+}
+.perf-table th:first-child{text-align:left;color:var(--t4);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
+.perf-table th:last-child{color:var(--t1);font-weight:800}
+.perf-table td{
+  font-size:12px;font-weight:700;text-align:center;
+  padding:9px 4px;border-radius:8px;font-variant-numeric:tabular-nums;
+  min-width:62px;white-space:nowrap;
+}
+.perf-table .yr-col{
+  text-align:left;color:var(--t2);font-size:13px;font-weight:800;
+  padding:9px 12px 9px 4px;border-radius:0;background:none;min-width:48px;
+}
+.perf-cell-empty{
+  background:var(--l3)!important;color:var(--t4)!important;font-weight:500!important;
+}
+.perf-cell-pos-lg{background:rgba(0,208,158,.35);color:#00f0b8}
+.perf-cell-pos-sm{background:rgba(0,208,158,.18);color:#00D09E}
+.perf-cell-neg-sm{background:rgba(251,54,64,.18);color:#FB3640}
+.perf-cell-neg-lg{background:rgba(251,54,64,.35);color:#ff6b74}
+.perf-total-pos{background:rgba(0,208,158,.18);color:#00D09E;font-weight:800;min-width:62px}
+.perf-total-neg{background:rgba(251,54,64,.18);color:#FB3640;font-weight:800;min-width:62px}
 
 /* ── Holdings table ─────────────────────────────────────────────── */
 .toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
@@ -215,10 +236,10 @@ tbody tr:last-child td{border-bottom:none}
     <div style="overflow-x:auto">
       <table class="perf-table">
         <thead><tr>
-          <th></th>
+          <th>Year</th>
           <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
           <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
-          <th style="color:#fbbf24">YTD</th>
+          <th>Total</th>
         </tr></thead>
         <tbody id="perfBody"></tbody>
       </table>
@@ -709,17 +730,27 @@ function renderSector(h) {
 // RENDER: Performance heatmap
 // ================================================================
 function renderPerf(data) {
+  function cellClass(v) {
+    if (v > 5)  return 'perf-cell-pos-lg';
+    if (v > 0)  return 'perf-cell-pos-sm';
+    if (v > -5) return 'perf-cell-neg-sm';
+    return 'perf-cell-neg-lg';
+  }
+  function fmtV(v) { return (v > 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
   document.getElementById('perfBody').innerHTML = data.map(function(row){
-    return '<tr><td class="yr-col">' + row.year + '</td>' +
-      row.months.map(function(v){
-        if (v === null) return '<td style="color:#4a5068">—</td>';
-        var bg = v > 4 ? 'rgba(0,208,158,.25)' : v > 0 ? 'rgba(0,208,158,.1)' : v > -4 ? 'rgba(251,54,64,.1)' : 'rgba(251,54,64,.25)';
-        var fg = v >= 0 ? '#00D09E' : '#FB3640';
-        return '<td style="background:' + bg + ';color:' + fg + '">' + v.toFixed(1) + '%</td>';
-      }).join('') +
-      '<td style="font-weight:700;color:' + (row.yearTotal >= 0 ? '#00D09E' : '#FB3640') + '">' +
-        (row.yearTotal !== null ? (row.yearTotal > 0 ? '+' : '') + row.yearTotal.toFixed(1) + '%' : '—') +
-      '</td></tr>';
+    var monthCells = row.months.map(function(v){
+      if (v === null || v === undefined)
+        return '<td class="perf-cell-empty">—</td>';
+      return '<td class="' + cellClass(v) + '">' + fmtV(v) + '</td>';
+    }).join('');
+
+    var tot = row.yearTotal;
+    var totCell = (tot === null || tot === undefined)
+      ? '<td class="perf-cell-empty">—</td>'
+      : '<td class="' + (tot >= 0 ? 'perf-total-pos' : 'perf-total-neg') + '">' + fmtV(tot) + '</td>';
+
+    return '<tr><td class="yr-col">' + row.year + '</td>' + monthCells + totCell + '</tr>';
   }).join('');
 }
 
