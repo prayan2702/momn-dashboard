@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -28,41 +27,41 @@ a{color:var(--blue);text-decoration:none}
 
 /* ── Layout ────────────────────────────────────────────────────── */
 .container{max-width:1140px;margin:0 auto;padding:28px 20px 60px}
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(–sep)}
-.topbar h1{font-size:26px;font-weight:800;letter-spacing:-0.5px;color:var(–t1)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--sep)}
+.topbar h1{font-size:26px;font-weight:800;letter-spacing:-0.5px;color:var(--t1)}
 .topbar-right{display:flex;align-items:center;gap:10px}
-#status{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(–t3)}
-#status.loading{color:var(–amber)}
-#status.ok{color:var(–green)}
-#status.err{color:var(–red)}
-.btn{font-family:var(–font);font-size:12px;font-weight:600;padding:0 14px;height:32px;border-radius:20px;border:1px solid var(–sep);background:var(–l2);color:var(–t2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
-.btn:hover{background:var(–l3);color:var(–t1);border-color:var(–sep)}
+#status{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3)}
+#status.loading{color:var(--amber)}
+#status.ok{color:var(--green)}
+#status.err{color:var(--red)}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:0 14px;height:32px;border-radius:20px;border:1px solid var(--sep);background:var(--l2);color:var(--t2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--l3);color:var(--t1);border-color:var(--sep)}
 
 /* ── KPI strip — indices card gets 1.5× share ───────────────────── */
 .kpi-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
-.kpi{background:var(–l2);border:1px solid var(–sep2);border-radius:20px;padding:20px 22px;box-shadow:var(–card-shadow);transition:border-color .3s,transform .2s}
-.kpi:hover{border-color:var(–sep);transform:translateY(-2px)}
-.kpi-label{font-size:11px;font-weight:700;color:var(–t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+.kpi{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:20px 22px;box-shadow:var(--card-shadow);transition:border-color .3s,transform .2s}
+.kpi:hover{border-color:var(--sep);transform:translateY(-2px)}
+.kpi-label{font-size:11px;font-weight:700;color:var(--t4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
 .kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1.1}
-.kpi-sub{font-size:11px;font-weight:600;color:var(–t3);margin-top:6px;font-variant-numeric:tabular-nums}
-.g{color:var(–green)}.r{color:var(–red)}.b{color:var(–blue)}
+.kpi-sub{font-size:11px;font-weight:600;color:var(--t3);margin-top:6px;font-variant-numeric:tabular-nums}
+.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}
 
 /* ── Nifty / index card ─────────────────────────────────────────── */
 .idx-row{display:grid;grid-template-columns:70px 1fr auto auto;align-items:center;gap:6px}
-.idx-name{font-size:10px;font-weight:700;color:var(–t4);letter-spacing:.4px;text-transform:uppercase}
-.idx-cmp{font-size:18px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;color:var(–t1)}
+.idx-name{font-size:10px;font-weight:700;color:var(--t4);letter-spacing:.4px;text-transform:uppercase}
+.idx-cmp{font-size:18px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;color:var(--t1)}
 .idx-pts{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .idx-chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.idx-divider{height:1px;background:var(–sep2);margin:10px 0}
+.idx-divider{height:1px;background:var(--sep2);margin:10px 0}
 
 /* ── Cards ─────────────────────────────────────────────────────── */
-.card{background:var(–l2);border:1px solid var(–sep2);border-radius:20px;padding:22px;box-shadow:var(–card-shadow);transition:border-color .3s}
-.card-title{font-size:11px;font-weight:700;color:var(–t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card{background:var(--l2);border:1px solid var(--sep2);border-radius:20px;padding:22px;box-shadow:var(--card-shadow);transition:border-color .3s}
+.card-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px}
 
 /* ── Benchmark chart legend ─────────────────────────────────────── */
 .bench-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px}
-.bench-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(–t3);cursor:pointer;transition:opacity .2s}
+.bench-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;transition:opacity .2s}
 .bench-item:hover{opacity:.7}
 .bench-line{width:16px;height:3px;border-radius:2px;flex-shrink:0}
 .bench-item.faded{opacity:.35}
@@ -70,22 +69,22 @@ a{color:var(--blue);text-decoration:none}
 /* ── Performance heatmap ───────────────────────────────────────── */
 .perf-table{width:100%;border-collapse:separate;border-spacing:4px 6px}
 .perf-table th{
-font-size:11px;font-weight:700;color:var(–t3);padding:4px 6px;
-text-align:center;text-transform:capitalize;letter-spacing:.1px;white-space:nowrap;
+  font-size:11px;font-weight:700;color:var(--t3);padding:4px 6px;
+  text-align:center;text-transform:capitalize;letter-spacing:.1px;white-space:nowrap;
 }
-.perf-table th:first-child{text-align:left;color:var(–t4);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
-.perf-table th:last-child{color:var(–t1);font-weight:800}
+.perf-table th:first-child{text-align:left;color:var(--t4);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
+.perf-table th:last-child{color:var(--t1);font-weight:800}
 .perf-table td{
-font-size:12px;font-weight:700;text-align:center;
-padding:9px 4px;border-radius:8px;font-variant-numeric:tabular-nums;
-min-width:62px;white-space:nowrap;
+  font-size:12px;font-weight:700;text-align:center;
+  padding:9px 4px;border-radius:8px;font-variant-numeric:tabular-nums;
+  min-width:62px;white-space:nowrap;
 }
 .perf-table .yr-col{
-text-align:left;color:var(–t2);font-size:13px;font-weight:800;
-padding:9px 12px 9px 4px;border-radius:0;background:none;min-width:48px;
+  text-align:left;color:var(--t2);font-size:13px;font-weight:800;
+  padding:9px 12px 9px 4px;border-radius:0;background:none;min-width:48px;
 }
 .perf-cell-empty{
-background:var(–l3)!important;color:var(–t4)!important;font-weight:500!important;
+  background:var(--l3)!important;color:var(--t4)!important;font-weight:500!important;
 }
 .perf-cell-pos-lg{background:rgba(0,208,158,.35);color:#00f0b8}
 .perf-cell-pos-sm{background:rgba(0,208,158,.18);color:#00D09E}
@@ -96,20 +95,20 @@ background:var(–l3)!important;color:var(–t4)!important;font-weight:500!impor
 
 /* ── Holdings table ─────────────────────────────────────────────── */
 .toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
-.search{flex:1;background:var(–l1);border:1px solid var(–sep2);border-radius:10px;padding:9px 14px;color:var(–t1);font-size:12px;font-family:var(–font);transition:.2s}
-.search::placeholder{color:var(–t4)}
-.search:focus{outline:none;border-color:var(–blue)}
+.search{flex:1;background:var(--l1);border:1px solid var(--sep2);border-radius:10px;padding:9px 14px;color:var(--t1);font-size:12px;font-family:var(--font);transition:.2s}
+.search::placeholder{color:var(--t4)}
+.search:focus{outline:none;border-color:var(--blue)}
 .sort-group{display:flex;gap:4px}
-.sort-btn{font-size:11px;font-weight:600;padding:0 14px;height:30px;border-radius:20px;border:1px solid var(–sep2);background:var(–l1);color:var(–t3);cursor:pointer;transition:.2s;font-family:var(–font)}
-.sort-btn.on{background:rgba(10,209,166,0.12);color:var(–blue);border-color:rgba(10,209,166,0.3)}
-.tbl-wrap{overflow-x:auto;border:1px solid var(–sep2);border-radius:14px;background:var(–l1)}
+.sort-btn{font-size:11px;font-weight:600;padding:0 14px;height:30px;border-radius:20px;border:1px solid var(--sep2);background:var(--l1);color:var(--t3);cursor:pointer;transition:.2s;font-family:var(--font)}
+.sort-btn.on{background:rgba(10,209,166,0.12);color:var(--blue);border-color:rgba(10,209,166,0.3)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--sep2);border-radius:14px;background:var(--l1)}
 table{width:100%;border-collapse:collapse;min-width:480px}
-thead th{background:var(–l2);font-size:10px;color:var(–t3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:14px 16px;text-align:right;border-bottom:1px solid var(–sep2);cursor:pointer;white-space:nowrap}
+thead th{background:var(--l2);font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:14px 16px;text-align:right;border-bottom:1px solid var(--sep2);cursor:pointer;white-space:nowrap}
 thead th:first-child,thead th:nth-child(2){text-align:left}
-thead th:hover{color:var(–blue)}
-tbody td{padding:12px 16px;border-bottom:1px solid var(–sep2);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;transition:.15s}
+thead th:hover{color:var(--blue)}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--sep2);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;transition:.15s}
 tbody td:first-child,tbody td:nth-child(2){text-align:left}
-tbody tr:hover td{background:var(–l2)}
+tbody tr:hover td{background:var(--l2)}
 tbody tr:last-child td{border-bottom:none}
 .cap{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
 .Large{background:rgba(10,209,166,.12);color:#0AD1A6}
@@ -119,52 +118,51 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ── Bottom cards ───────────────────────────────────────────────── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-.rank-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(–sep2);font-size:13px;font-weight:600}
+.rank-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--sep2);font-size:13px;font-weight:600}
 .rank-item:last-child{border-bottom:none}
-.rank-sym{font-weight:700;color:var(–t1)}
+.rank-sym{font-weight:700;color:var(--t1)}
 .pct-chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-.pct-g{background:rgba(0,208,158,.12);color:var(–green);border:1px solid rgba(0,208,158,.2)}
-.pct-r{background:rgba(251,54,64,.12);color:var(–red);border:1px solid rgba(251,54,64,.2)}
+.pct-g{background:rgba(0,208,158,.12);color:var(--green);border:1px solid rgba(0,208,158,.2)}
+.pct-r{background:rgba(251,54,64,.12);color:var(--red);border:1px solid rgba(251,54,64,.2)}
 
 /* ── Sector legend ──────────────────────────────────────────────── */
 .sector-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.s-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(–t3)}
+.s-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--t3)}
 .s-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
 
 /* ── Loading overlay — blur glass ──────────────────────────────── */
 #overlay{
-position:fixed;inset:0;z-index:100;
-display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-background:rgba(0,0,0,0.55);
-backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-transition:opacity .35s ease, backdrop-filter .35s ease;
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transition:opacity .35s ease, backdrop-filter .35s ease;
 }
 #overlay.hide{opacity:0;pointer-events:none;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}
 .spinner{
-width:40px;height:40px;
-border:2.5px solid rgba(10,209,166,0.2);
-border-top-color:#0AD1A6;
-border-radius:50%;
-animation:spin .7s linear infinite;
+  width:40px;height:40px;
+  border:2.5px solid rgba(10,209,166,0.2);
+  border-top-color:#0AD1A6;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
 }
 .overlay-txt{
-font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-color:rgba(240,237,229,0.6);font-family:var(–font);
+  font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(240,237,229,0.6);font-family:var(--font);
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:900px){
-.kpi-row{grid-template-columns:1fr 1fr}
-.chart-row{grid-template-columns:1fr}
-.two-col{grid-template-columns:1fr}
-.kpi-val{font-size:22px}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .chart-row{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .kpi-val{font-size:22px}
 }
 @media(max-width:500px){
-.kpi-row{grid-template-columns:1fr}
-.topbar h1{font-size:20px}
+  .kpi-row{grid-template-columns:1fr}
+  .topbar h1{font-size:20px}
 }
 </style>
-
 </head>
 <body>
 
@@ -176,50 +174,46 @@ color:rgba(240,237,229,0.6);font-family:var(–font);
     <div class="topbar-right">
       <span id="status" class="loading">Loading...</span>
       <button class="btn" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
-      <button class="btn" onclick="loadAll(true)">↻ Refresh</button>
+      <button class="btn" onclick="loadAll()">↻ Refresh</button>
     </div>
   </div>
 
   <!-- KPI Strip — 5 cards -->
-
   <div class="kpi-row">
 
-```
-<!-- Market Indices Card -->
-<div class="kpi">
-  <div class="kpi-label">Market Indices</div>
-  <div class="idx-row">
-    <span class="idx-name">NIFTY 50</span>
-    <span class="idx-cmp" id="kpiNifty50">—</span>
-    <span class="idx-pts" id="kpiNifty50Pts">—</span>
-    <span class="idx-chip" id="kpiNifty50Chg">—</span>
-  </div>
-  <div class="idx-divider"></div>
-  <div class="idx-row">
-    <span class="idx-name">NIFTY 500</span>
-    <span class="idx-cmp" id="kpiNifty500">—</span>
-    <span class="idx-pts" id="kpiNifty500Pts">—</span>
-    <span class="idx-chip" id="kpiNifty500Chg">—</span>
-  </div>
-</div>
+    <!-- Market Indices Card -->
+    <div class="kpi">
+      <div class="kpi-label">Market Indices</div>
+      <div class="idx-row">
+        <span class="idx-name">NIFTY 50</span>
+        <span class="idx-cmp" id="kpiNifty50">—</span>
+        <span class="idx-pts" id="kpiNifty50Pts">—</span>
+        <span class="idx-chip" id="kpiNifty50Chg">—</span>
+      </div>
+      <div class="idx-divider"></div>
+      <div class="idx-row">
+        <span class="idx-name">NIFTY 500</span>
+        <span class="idx-cmp" id="kpiNifty500">—</span>
+        <span class="idx-pts" id="kpiNifty500Pts">—</span>
+        <span class="idx-chip" id="kpiNifty500Chg">—</span>
+      </div>
+    </div>
 
-<!-- XIRR -->
-<div class="kpi"><div class="kpi-label">XIRR</div><div class="kpi-val" id="kpiXirr">—</div><div class="kpi-sub">Since inception</div></div>
+    <!-- XIRR -->
+    <div class="kpi"><div class="kpi-label">XIRR</div><div class="kpi-val" id="kpiXirr">—</div><div class="kpi-sub">Since inception</div></div>
 
-<!-- NAV -->
-<div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-val b" id="kpiNav">—</div><div class="kpi-sub" id="kpiNavSub">—</div></div>
+    <!-- NAV -->
+    <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-val b" id="kpiNav">—</div><div class="kpi-sub" id="kpiNavSub">—</div></div>
 
-<!-- Today's Gain -->
-<div class="kpi"><div class="kpi-label">Today's Gain</div><div class="kpi-val" id="kpiToday">—</div><div class="kpi-sub" id="kpiStocks">—</div></div>
+    <!-- Today's Gain -->
+    <div class="kpi"><div class="kpi-label">Today's Gain</div><div class="kpi-val" id="kpiToday">—</div><div class="kpi-sub" id="kpiStocks">—</div></div>
 
-<!-- Drawdown -->
-<div class="kpi"><div class="kpi-label">Drawdown</div><div class="kpi-val r" id="kpiDD2">—</div><div class="kpi-sub" id="kpiDDMax">—</div></div>
-```
+    <!-- Drawdown -->
+    <div class="kpi"><div class="kpi-label">Drawdown</div><div class="kpi-val r" id="kpiDD2">—</div><div class="kpi-sub" id="kpiDDMax">—</div></div>
 
   </div>
 
   <!-- Charts Row -->
-
   <div class="chart-row">
     <div class="card">
       <div class="card-title">
@@ -237,7 +231,6 @@ color:rgba(240,237,229,0.6);font-family:var(–font);
   </div>
 
   <!-- Performance Heatmap -->
-
   <div class="card" style="margin-bottom:16px">
     <div class="card-title">Monthly returns (%)</div>
     <div style="overflow-x:auto">
@@ -254,7 +247,6 @@ color:rgba(240,237,229,0.6);font-family:var(–font);
   </div>
 
   <!-- Holdings Table — Symbol | Today% | Gain% | CMP | Pos% | Cap -->
-
   <div class="card">
     <div class="toolbar">
       <input class="search" type="text" id="q" placeholder="Search symbol..." oninput="renderTable()">
@@ -280,7 +272,6 @@ color:rgba(240,237,229,0.6);font-family:var(–font);
   </div>
 
   <!-- Bottom: top gainers / losers -->
-
   <div class="two-col">
     <div class="card">
       <div class="card-title">Top 5 gainers</div>
@@ -412,30 +403,18 @@ var hiddenSeries = {};
 // ================================================================
 // DATA LOAD
 // ================================================================
-async function loadAll(showOverlay) {
-  // showOverlay=true only on first page load; background refreshes are silent
-  if (showOverlay) {
-    var ovTxt = document.getElementById('overlayTxt');
-    if (ovTxt) ovTxt.textContent = 'Loading...';
-    document.getElementById('overlay').classList.remove('hide');
-    setStatus('loading', 'Loading...');
-  } else {
-    // Silent refresh — just show topbar status dot
-    setStatus('loading', 'Refreshing...');
-  }
+async function loadAll() {
+  setStatus('loading', 'Loading...');
+  var ovTxt = document.getElementById('overlayTxt');
+  if (ovTxt) ovTxt.textContent = 'Loading...';
+  document.getElementById('overlay').classList.remove('hide');
   try {
     var data;
     if (MOCK_MODE || API_URL.includes('YOUR_DEPLOYMENT_ID')) {
       data = MOCK;
     } else {
       try {
-        var resp = await fetch(API_URL, {
-          method: 'POST',
-          redirect: 'follow',
-          cache: 'no-store',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'all', t: Date.now() })
-        });
+        var resp = await fetch(API_URL + '?action=all', { redirect:'follow' });
         var json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'API error');
         data = json.data;
@@ -445,17 +424,20 @@ async function loadAll(showOverlay) {
         setStatus('err', 'API error — showing cached data');
       }
     }
-    renderAll(data, showOverlay);
+    renderAll(data);
   } catch(e) {
     setStatus('err', 'Error: ' + e.message);
-    if (showOverlay) {
-      var ovElErr = document.getElementById('overlay');
-      if (ovElErr) ovElErr.classList.add('hide');
-    }
+    var ovElErr = document.getElementById('overlay');
+    if (ovElErr) ovElErr.classList.add('hide');
   }
 }
 
-function renderAll(data, hideOverlay) {
+function renderAll(data) {
+  // Debug: log what API actually returned
+  console.log('API response - benchmarking rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 'MISSING');
+  console.log('API response - indexData nifty cmp:', data.indexData && data.indexData.nifty ? data.indexData.nifty.cmp : 'MISSING');
+  console.log('API response - summary:', data.portfolio && data.portfolio.summary ? JSON.stringify(data.portfolio.summary) : 'MISSING');
+
   // Fallback to MOCK benchmarking if API data is missing or empty
   var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
     ? data.benchmarking : MOCK.benchmarking;
@@ -472,7 +454,6 @@ function renderAll(data, hideOverlay) {
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
-  // Always hide overlay after any render (first load AND background refresh)
   var ovEl = document.getElementById('overlay');
   if (ovEl) ovEl.classList.add('hide');
 }
@@ -836,18 +817,16 @@ function toggleTheme(){
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
   if(benchChartInst)  { benchChartInst.destroy();  benchChartInst=null; }
   if(sectorChartInst) { sectorChartInst.destroy(); sectorChartInst=null; }
-  loadAll(true);
+  loadAll();
 }
 
 function fmtL(n){
   if(n==null||isNaN(n)) return '—';
-  // -999 / 999 are common sheet placeholder sentinel values — treat as missing
-  if (n === -999 || n === 999 || n === -9999 || n === 9999) return '—';
   var a = Math.abs(n), sign = n < 0 ? '-' : '';
   if (a >= 10000000) return sign + (a/10000000).toFixed(2) + 'Cr';
   if (a >= 100000)   return sign + (a/100000).toFixed(2) + 'L';
   if (a >= 1000)     return sign + (a/1000).toFixed(1) + 'K';
-  return sign + a.toFixed(0);
+  return sign + a;
 }
 function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v).toFixed(2)+'%'; }
 
@@ -867,8 +846,8 @@ holdings = MOCK.portfolio.holdings; // silent, no render
 
 // Step 2: Load Chart.js then fetch real data
 function startDashboard() {
-  loadAll(true);   // first load: show blur overlay
-  setInterval(function(){ loadAll(false); }, 5 * 60 * 1000);  // auto-refresh: silent
+  loadAll();  // fetch real API data; overlay hides when done
+  setInterval(loadAll, 5 * 60 * 1000);
 }
 var cjsScript = document.createElement('script');
 cjsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
@@ -879,6 +858,5 @@ cjsScript.onerror = function(){
 };
 document.head.appendChild(cjsScript);
 </script>
-
 </body>
 </html>
