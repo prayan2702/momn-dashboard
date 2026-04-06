@@ -420,7 +420,13 @@ async function loadAll(showOverlay) {
       data = MOCK;
     } else {
       try {
-        var resp = await fetch(API_URL + '?action=all&t=' + Date.now(), { redirect:'follow', cache:'no-store' });
+        var resp = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'all', t: Date.now() })
+        });
         var json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'API error');
         data = json.data;
