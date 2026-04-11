@@ -168,6 +168,7 @@ tbody tr:last-child td{border-bottom:none}
   .chart-row{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
   .kpi-val{font-size:22px}
+  .main-chart-grid{grid-template-columns:1fr !important}
 }
 @media(max-width:500px){
   .kpi-row{grid-template-columns:1fr}
@@ -224,31 +225,44 @@ tbody tr:last-child td{border-bottom:none}
 
   </div>
 
-  <!-- Charts Row: Performance (full width) + Sector -->
-  <div class="chart-row" style="grid-template-columns:2fr 1fr;margin-bottom:0">
-    <div class="card">
-      <div class="card-title">
-        Performance Comparison
-        <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
-      </div>
-      <div class="bench-legend" id="benchLeg"></div>
-      <div style="position:relative;height:240px"><canvas id="navChart"></canvas></div>
-    </div>
+  <!-- Main chart area: LEFT = Perf + DD stacked | RIGHT = Sector + Index table -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;align-items:start">
+
+    <!-- LEFT column: Performance chart + Drawdown chart -->
     <div style="display:flex;flex-direction:column;gap:14px">
       <div class="card">
-        <div class="card-title">Sector allocation</div>
+        <div class="card-title">
+          Performance Comparison
+          <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
+        </div>
+        <div class="bench-legend" id="benchLeg"></div>
+        <div style="position:relative;height:240px"><canvas id="navChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#FF6B6B;margin-bottom:8px">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B6B;margin-right:5px;flex-shrink:0;vertical-align:middle"></span>
+          DrawDown
+        </div>
+        <div style="position:relative;height:110px"><canvas id="ddChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- RIGHT column: Sector donut + Index table -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-title">Sector Allocation</div>
         <div class="sector-legend" id="sectorLeg"></div>
         <div style="position:relative;height:150px"><canvas id="sectorChart"></canvas></div>
       </div>
-      <div class="card" style="flex:1;padding:16px 18px">
-        <div class="card-title">Market Indices</div>
-        <div id="idxTableWrap" style="overflow-y:auto;max-height:180px">
+      <div class="card" style="padding:16px 18px">
+        <div class="card-title" style="margin-bottom:8px">Market Indices</div>
+        <div id="idxTableWrap" style="overflow-y:auto;max-height:240px">
           <table style="width:100%;border-collapse:collapse">
             <thead>
               <tr>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:left;padding:0 6px 6px 0;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap">Index</th>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 6px 6px;letter-spacing:.3px;text-transform:uppercase">CMP</th>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 0 6px;letter-spacing:.3px;text-transform:uppercase">Chg%</th>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:left;padding:0 6px 7px 0;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--sep2)">Index</th>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 6px 7px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2)">CMP</th>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 0 7px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2)">Chg%</th>
               </tr>
             </thead>
             <tbody id="idxTableBody"></tbody>
@@ -256,18 +270,7 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Drawdown Chart — aligned under Performance chart -->
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;margin-top:14px">
-    <div class="card">
-      <div class="card-title" style="color:#FF6B6B">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B6B;margin-right:5px;flex-shrink:0"></span>
-        DrawDown
-      </div>
-      <div style="position:relative;height:110px"><canvas id="ddChart"></canvas></div>
-    </div>
-    <div></div>
   </div>
 
   <!-- Performance Heatmap -->
