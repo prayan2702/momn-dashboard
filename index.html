@@ -86,12 +86,18 @@ a{color:var(--blue);text-decoration:none}
 .perf-cell-empty{
   background:var(--l3)!important;color:var(--t4)!important;font-weight:500!important;
 }
-.perf-cell-pos-lg{background:rgba(0,208,158,.55);color:#00ffc8;text-shadow:0 0 8px rgba(0,208,158,.4)}
-.perf-cell-pos-sm{background:rgba(0,208,158,.22);color:#00D09E}
-.perf-cell-neg-sm{background:rgba(251,54,64,.22);color:#FF6B74}
-.perf-cell-neg-lg{background:rgba(251,54,64,.55);color:#ff8a91;text-shadow:0 0 8px rgba(251,54,64,.4)}
-.perf-total-pos{background:rgba(0,208,158,.28);color:#00D09E;font-weight:800;min-width:62px;border:1px solid rgba(0,208,158,.25)}
-.perf-total-neg{background:rgba(251,54,64,.28);color:#FB3640;font-weight:800;min-width:62px;border:1px solid rgba(251,54,64,.25)}
+.perf-cell-pos-lg{background:#0d3d2e;color:#00D09E}
+.perf-cell-pos-sm{background:#0a2920;color:#00a87e}
+.perf-cell-neg-sm{background:#2d1215;color:#e05560}
+.perf-cell-neg-lg{background:#3d0f13;color:#FB3640}
+.perf-total-pos{background:#0d3d2e;color:#00D09E;font-weight:800;min-width:62px}
+.perf-total-neg{background:#3d0f13;color:#FB3640;font-weight:800;min-width:62px}
+html.light .perf-cell-pos-lg{background:rgba(0,168,128,.28);color:#006b50}
+html.light .perf-cell-pos-sm{background:rgba(0,168,128,.14);color:#007a5c}
+html.light .perf-cell-neg-sm{background:rgba(251,54,64,.14);color:#d4202c}
+html.light .perf-cell-neg-lg{background:rgba(251,54,64,.28);color:#b81820}
+html.light .perf-total-pos{background:rgba(0,168,128,.22);color:#006b50}
+html.light .perf-total-neg{background:rgba(251,54,64,.22);color:#d4202c}
 
 /* ── Holdings table ─────────────────────────────────────────────── */
 .toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
@@ -151,6 +157,11 @@ tbody tr:last-child td{border-bottom:none}
   color:rgba(240,237,229,0.6);font-family:var(--font);
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Index table scrollbar ──────────────────────────────────────── */
+#idxTableWrap::-webkit-scrollbar{width:3px}
+#idxTableWrap::-webkit-scrollbar-track{background:transparent}
+#idxTableWrap::-webkit-scrollbar-thumb{background:var(--sep);border-radius:2px}
 
 @media(max-width:900px){
   .kpi-row{grid-template-columns:1fr 1fr}
@@ -223,10 +234,27 @@ tbody tr:last-child td{border-bottom:none}
       <div class="bench-legend" id="benchLeg"></div>
       <div style="position:relative;height:240px"><canvas id="navChart"></canvas></div>
     </div>
-    <div class="card">
-      <div class="card-title">Sector allocation</div>
-      <div class="sector-legend" id="sectorLeg"></div>
-      <div style="position:relative;height:150px"><canvas id="sectorChart"></canvas></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-title">Sector allocation</div>
+        <div class="sector-legend" id="sectorLeg"></div>
+        <div style="position:relative;height:150px"><canvas id="sectorChart"></canvas></div>
+      </div>
+      <div class="card" style="flex:1;padding:16px 18px">
+        <div class="card-title">Market Indices</div>
+        <div id="idxTableWrap" style="overflow-y:auto;max-height:180px">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:left;padding:0 6px 6px 0;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap">Index</th>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 6px 6px;letter-spacing:.3px;text-transform:uppercase">CMP</th>
+                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 0 6px;letter-spacing:.3px;text-transform:uppercase">Chg%</th>
+              </tr>
+            </thead>
+            <tbody id="idxTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -411,6 +439,42 @@ var MOCK = {
   ]
 };
 
+// MOCK exits for bubble chart fallback (screenshot se liya)
+var MOCK_EXITS = [
+  {symbol:'CUPID',     holdDays:248, gainPct:162.3,  gainLoss:98500},
+  {symbol:'MTARTECH',  holdDays:152, gainPct:73.4,   gainLoss:52000},
+  {symbol:'FORCEMOT',  holdDays:375, gainPct:38.2,   gainLoss:45000},
+  {symbol:'LUMAXTECH', holdDays:285, gainPct:55.6,   gainLoss:59000},
+  {symbol:'NATIONALUM',holdDays:98,  gainPct:28.4,   gainLoss:25000},
+  {symbol:'MCX',       holdDays:134, gainPct:31.2,   gainLoss:31200},
+  {symbol:'SEAMECLTD', holdDays:62,  gainPct:12.1,   gainLoss:8500},
+  {symbol:'TMB',       holdDays:68,  gainPct:8.3,    gainLoss:5200},
+  {symbol:'SHGRAMFIN', holdDays:138, gainPct:5.1,    gainLoss:4800},
+  {symbol:'FEDERALBNK',holdDays:140, gainPct:2.9,    gainLoss:2500},
+  {symbol:'INDIANB',   holdDays:158, gainPct:-1.2,   gainLoss:1100},
+  {symbol:'BAJAJCON',  holdDays:35,  gainPct:-4.3,   gainLoss:3800},
+  {symbol:'SANSERA',   holdDays:42,  gainPct:-6.7,   gainLoss:5900},
+  {symbol:'JKTYRE',    holdDays:28,  gainPct:-18.4,  gainLoss:12000},
+  {symbol:'AUBANK',    holdDays:145, gainPct:-8.1,   gainLoss:7200},
+];
+
+// MOCK full index table data
+var MOCK_INDICES_TABLE = [
+  {name:'NIFTY_50',    cmp:24051, prev:23775, pts:276,  pct:1.16},
+  {name:'SENSEX',      cmp:77550, prev:76632, pts:919,  pct:1.20},
+  {name:'INDIA_VIX',   cmp:18.9,  prev:20.4,  pts:-1.6, pct:-7.72},
+  {name:'NIFTY_100',   cmp:24810, prev:24487, pts:323,  pct:1.32},
+  {name:'BSE-SMLCAP',  cmp:7640,  prev:7516,  pts:124,  pct:1.64},
+  {name:'BSE-MIDCAP',  cmp:16418, prev:16176, pts:242,  pct:1.50},
+  {name:'NIFTY_200',   cmp:13581, prev:13399, pts:182,  pct:1.36},
+  {name:'NIFTY_500',   cmp:22347, prev:22038, pts:309,  pct:1.40},
+  {name:'GOLDBEES',    cmp:124,   prev:123,   pts:0.4,  pct:0.32},
+  {name:'S&P 500',     cmp:6817,  prev:6825,  pts:-8,   pct:-0.11},
+  {name:'NASDAQ',      cmp:22903, prev:22822, pts:80,   pct:0.35},
+  {name:'Hang Seng',   cmp:25894, prev:25752, pts:141,  pct:0.55},
+  {name:'Nikkei',      cmp:56924, prev:55895, pts:1029, pct:1.84},
+];
+
 // ================================================================
 // STATE
 // ================================================================
@@ -464,6 +528,7 @@ function renderAll(data) {
 
   renderKPIs(data.portfolio.summary, data.indexData, bench);
   renderPerf(data.performance);
+  renderIndexTable(data.indexData);
   holdings = data.portfolio.holdings;
   renderTable();
   renderTopGL();
@@ -582,6 +647,49 @@ function renderIndexCard(indexData) {
 
   setIdx('kpiNifty50',  'kpiNifty50Pts',  'kpiNifty50Chg',  indexData.nifty);
   setIdx('kpiNifty500', 'kpiNifty500Pts', 'kpiNifty500Chg', indexData.nifty500);
+}
+
+// ================================================================
+// RENDER: Full Index Table (in right column below sector donut)
+// Data comes from DashBoard sheet (same source as top KPI card)
+// Falls back to MOCK_INDICES_TABLE when API doesn't return full list
+// ================================================================
+function renderIndexTable(indexData) {
+  var tbody = document.getElementById('idxTableBody');
+  if (!tbody) return;
+
+  // Build rows: API may only return nifty+nifty500 in indexData
+  // We use MOCK_INDICES_TABLE as structure and overlay live values
+  var rows = MOCK_INDICES_TABLE.map(function(m) {
+    // Try to match live data
+    var nm = m.name.replace(/[^A-Z0-9]/gi,'').toUpperCase();
+    var live = null;
+    if (indexData) {
+      if (indexData.nifty && (nm==='NIFTY50'||nm==='NIFTY_50')) live = indexData.nifty;
+      if (indexData.nifty500 && (nm==='NIFTY500'||nm==='NIFTY_500')) live = indexData.nifty500;
+    }
+    return {
+      name:    m.name,
+      cmp:     live ? live.cmp    : m.cmp,
+      pts:     live ? live.change : m.pts,
+      pct:     live ? live.changePct : m.pct
+    };
+  });
+
+  tbody.innerHTML = rows.map(function(r) {
+    var up = r.pct >= 0;
+    var color = up ? '#00D09E' : '#FB3640';
+    var sign  = up ? '+' : '';
+    var cmpFmt = r.cmp >= 1000
+      ? r.cmp.toLocaleString('en-IN', {maximumFractionDigits:0})
+      : (+r.cmp).toFixed(r.cmp < 100 ? 1 : 0);
+    return '<tr style="border-bottom:1px solid var(--sep2)">' +
+      '<td style="padding:5px 6px 5px 0;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap">' + r.name + '</td>' +
+      '<td style="padding:5px 6px;font-size:11px;font-weight:700;color:var(--t1);text-align:right;font-variant-numeric:tabular-nums">' + cmpFmt + '</td>' +
+      '<td style="padding:5px 0;font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' +
+        sign + r.pct.toFixed(2) + '%</td>' +
+    '</tr>';
+  }).join('');
 }
 
 // ================================================================
@@ -774,8 +882,7 @@ function renderDDChart(benchData) {
 }
 
 // ================================================================
-// RENDER: Bubble Chart — Holding Days vs % Gain (from exits data)
-// fetches XIRR sheet data via API action=xirr
+// RENDER: Bubble Chart — Holding Days vs % Gain
 // ================================================================
 var bubbleRawData = null;
 
@@ -783,13 +890,12 @@ function renderBubbleChart(exitsData, xirrData) {
   var canvas = document.getElementById('bubbleChart');
   if (!canvas) return;
 
-  // If xirr data already provided inline (from all API), use it directly
+  // 1. Best case: xirr data from 'all' API call
   if (xirrData && xirrData.length > 0) {
-    drawBubble(xirrData);
-    return;
+    drawBubble(xirrData); return;
   }
 
-  // Try to load XIRR data from API, fall back to exits data
+  // 2. Try separate xirr API call
   var apiBase = API_URL.split('?')[0];
   fetch(apiBase + '?action=xirr', { redirect: 'follow' })
     .then(function(r){ return r.json(); })
@@ -804,12 +910,13 @@ function renderBubbleChart(exitsData, xirrData) {
 }
 
 function drawBubbleFromExits(exitsData) {
-  if (!exitsData || exitsData.length === 0) return;
-  // Convert exits data: {symbol, buyPrice, sellPrice, qty, gainLoss, isGainer}
-  // We don't have holdingDays in exits directly, so use index as proxy
-  var pts = exitsData.map(function(e, i){
-    var gainPct = e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0;
-    return { symbol: e.symbol, holdDays: 30 + i * 5, gainPct: gainPct, gainLoss: e.gainLoss, isGainer: e.isGainer };
+  // If exits also empty, use MOCK exits so chart is never blank
+  var src = (exitsData && exitsData.length > 0) ? exitsData : MOCK_EXITS;
+  var pts = src.map(function(e, i){
+    var gainPct = e.gainPct !== undefined ? e.gainPct
+                : (e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0);
+    var holdDays = e.holdDays || (20 + i * 12);
+    return { symbol: e.symbol, holdDays: holdDays, gainPct: gainPct, gainLoss: Math.abs(e.gainLoss || 0) };
   });
   drawBubble(pts);
 }
@@ -981,45 +1088,30 @@ function renderSector(h) {
 // ================================================================
 function renderPerf(data) {
   function cellClass(v) {
-    if (v > 10) return 'perf-cell-pos-lg';
-    if (v > 3)  return 'perf-cell-pos-lg';
-    if (v > 0)  return 'perf-cell-pos-sm';
-    if (v > -3) return 'perf-cell-neg-sm';
+    if (v === null || v === undefined) return 'perf-cell-empty';
+    if (v >= 3)  return 'perf-cell-pos-lg';
+    if (v > 0)   return 'perf-cell-pos-sm';
+    if (v > -3)  return 'perf-cell-neg-sm';
     return 'perf-cell-neg-lg';
-  }
-  function getCellStyle(v) {
-    if (v === null || v === undefined) return '';
-    // Dynamic intensity: stronger color for bigger moves
-    var abs = Math.abs(v);
-    var intensity = Math.min(abs / 15, 1); // max at 15%
-    if (v > 0) {
-      var alpha = 0.15 + intensity * 0.55;
-      var bright = Math.round(160 + intensity * 95);
-      return 'background:rgba(0,208,158,' + alpha.toFixed(2) + ');color:rgb(0,' + bright + ',' + Math.round(bright * 0.78) + ');';
-    } else {
-      var alpha2 = 0.15 + intensity * 0.55;
-      var rb = Math.round(200 + intensity * 55);
-      return 'background:rgba(251,54,64,' + alpha2.toFixed(2) + ');color:rgb(' + rb + ',' + Math.round(rb * 0.3) + ',' + Math.round(rb * 0.32) + ');';
-    }
   }
   function fmtV(v) { return (v > 0 ? '+' : '') + v.toFixed(2) + '%'; }
 
   document.getElementById('perfBody').innerHTML = data.map(function(row){
     var monthCells = row.months.map(function(v){
-      if (v === null || v === undefined)
-        return '<td class="perf-cell-empty">—</td>';
-      var dynStyle = getCellStyle(v);
-      return '<td style="' + dynStyle + '">' + fmtV(v) + '</td>';
+      if (v === null || v === undefined) return '<td class="perf-cell-empty">—</td>';
+      return '<td class="' + cellClass(v) + '">' + fmtV(v) + '</td>';
     }).join('');
 
     var tot = row.yearTotal;
     var totCell = (tot === null || tot === undefined)
       ? '<td class="perf-cell-empty">—</td>'
-      : '<td class="' + (tot >= 0 ? 'perf-total-pos' : 'perf-total-neg') + '" style="' + getCellStyle(tot) + '">' + fmtV(tot) + '</td>';
+      : '<td class="' + (tot >= 0 ? 'perf-total-pos' : 'perf-total-neg') + '">' + fmtV(tot) + '</td>';
 
     return '<tr><td class="yr-col">' + row.year + '</td>' + monthCells + totCell + '</tr>';
   }).join('');
 }
+  function fmtV(v) { return (v > 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
 
 // ================================================================
 // RENDER: Holdings table — Symbol | Today% | Gain% | CMP | Pos% | Cap
