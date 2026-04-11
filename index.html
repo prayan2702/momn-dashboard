@@ -86,12 +86,12 @@ a{color:var(--blue);text-decoration:none}
 .perf-cell-empty{
   background:var(--l3)!important;color:var(--t4)!important;font-weight:500!important;
 }
-.perf-cell-pos-lg{background:rgba(0,208,158,.35);color:#00f0b8}
-.perf-cell-pos-sm{background:rgba(0,208,158,.18);color:#00D09E}
-.perf-cell-neg-sm{background:rgba(251,54,64,.18);color:#FB3640}
-.perf-cell-neg-lg{background:rgba(251,54,64,.35);color:#ff6b74}
-.perf-total-pos{background:rgba(0,208,158,.18);color:#00D09E;font-weight:800;min-width:62px}
-.perf-total-neg{background:rgba(251,54,64,.18);color:#FB3640;font-weight:800;min-width:62px}
+.perf-cell-pos-lg{background:rgba(0,208,158,.55);color:#00ffc8;text-shadow:0 0 8px rgba(0,208,158,.4)}
+.perf-cell-pos-sm{background:rgba(0,208,158,.22);color:#00D09E}
+.perf-cell-neg-sm{background:rgba(251,54,64,.22);color:#FF6B74}
+.perf-cell-neg-lg{background:rgba(251,54,64,.55);color:#ff8a91;text-shadow:0 0 8px rgba(251,54,64,.4)}
+.perf-total-pos{background:rgba(0,208,158,.28);color:#00D09E;font-weight:800;min-width:62px;border:1px solid rgba(0,208,158,.25)}
+.perf-total-neg{background:rgba(251,54,64,.28);color:#FB3640;font-weight:800;min-width:62px;border:1px solid rgba(251,54,64,.25)}
 
 /* ── Holdings table ─────────────────────────────────────────────── */
 .toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
@@ -213,21 +213,33 @@ tbody tr:last-child td{border-bottom:none}
 
   </div>
 
-  <!-- Charts Row -->
-  <div class="chart-row">
+  <!-- Charts Row: Performance (full width) + Sector -->
+  <div class="chart-row" style="grid-template-columns:2fr 1fr;margin-bottom:0">
     <div class="card">
       <div class="card-title">
         Performance Comparison
         <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
       </div>
       <div class="bench-legend" id="benchLeg"></div>
-      <div style="position:relative;height:260px"><canvas id="navChart"></canvas></div>
+      <div style="position:relative;height:240px"><canvas id="navChart"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Sector allocation</div>
       <div class="sector-legend" id="sectorLeg"></div>
       <div style="position:relative;height:150px"><canvas id="sectorChart"></canvas></div>
     </div>
+  </div>
+
+  <!-- Drawdown Chart — aligned under Performance chart -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;margin-top:14px">
+    <div class="card">
+      <div class="card-title" style="color:#FF6B6B">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B6B;margin-right:5px;flex-shrink:0"></span>
+        DrawDown
+      </div>
+      <div style="position:relative;height:110px"><canvas id="ddChart"></canvas></div>
+    </div>
+    <div></div>
   </div>
 
   <!-- Performance Heatmap -->
@@ -244,6 +256,14 @@ tbody tr:last-child td{border-bottom:none}
         <tbody id="perfBody"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Bubble Chart: Holding Days vs % Gain -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Holding Days vs % Gain
+      <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0;margin-left:8px">Exits · bubble size = gain/loss ₹</span>
+    </div>
+    <div style="position:relative;height:360px"><canvas id="bubbleChart"></canvas></div>
   </div>
 
   <!-- Holdings Table — Symbol | Today% | Gain% | CMP | Pos% | Cap -->
@@ -397,7 +417,7 @@ var MOCK = {
 var holdings   = [];
 var sortKey    = 'todayPct';
 var sortDir    = -1;
-var benchChartInst = null, sectorChartInst = null;
+var benchChartInst = null, sectorChartInst = null, ddChartInst = null, bubbleChartInst = null;
 var hiddenSeries = {};
 
 // ================================================================
@@ -451,6 +471,8 @@ function renderAll(data) {
   if (typeof Chart !== 'undefined') {
     try { renderBenchmarkChart(bench); }           catch(e){ console.warn('Bench chart:', e.message); }
     try { renderSector(data.portfolio.holdings); } catch(e){ console.warn('Sector:', e.message); }
+    try { renderDDChart(bench); }                  catch(e){ console.warn('DD chart:', e.message); }
+    try { renderBubbleChart(data.exits, data.xirr); } catch(e){ console.warn('Bubble chart:', e.message); }
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
@@ -686,6 +708,234 @@ function toggleSeries(key) {
 }
 
 // ================================================================
+// RENDER: DrawDown Chart (from benchmarking.rows ddPF)
+// ================================================================
+function renderDDChart(benchData) {
+  var canvas = document.getElementById('ddChart');
+  if (!canvas || !benchData || !benchData.rows) return;
+  var rows = benchData.rows.filter(function(r){ return r.date && r.ddPF !== null && r.ddPF !== undefined; });
+  if (rows.length === 0) return;
+
+  var isLight = document.documentElement.classList.contains('light');
+  var labels = rows.map(function(r){ return r.date; });
+  var ddVals = rows.map(function(r){ return r.ddPF; });
+
+  if (ddChartInst) ddChartInst.destroy();
+  ddChartInst = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'DrawDown %',
+        data: ddVals,
+        borderColor: '#FF6B6B',
+        borderWidth: 1.5,
+        fill: { target: 'origin', above: 'rgba(255,107,107,0.0)', below: 'rgba(255,107,107,0.18)' },
+        pointRadius: 0,
+        tension: 0.3,
+        spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index', intersect: false,
+          callbacks: {
+            title: function(ctx){ return ctx[0].label; },
+            label: function(ctx){ return 'DD: ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + '%' : '—'); }
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          ticks: {
+            color: isLight ? 'rgba(0,15,8,0.4)' : 'rgba(240,237,229,0.35)',
+            font: { size: 9, family: 'inherit' },
+            maxRotation: 0, autoSkip: true, maxTicksLimit: 10
+          },
+          grid: { display: false },
+          border: { display: false }
+        },
+        y: {
+          grid: { color: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(240,237,229,0.04)' },
+          ticks: {
+            color: isLight ? 'rgba(0,15,8,0.5)' : 'rgba(240,237,229,0.4)',
+            font: { size: 9 },
+            callback: function(v){ return v.toFixed(1) + '%'; }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ================================================================
+// RENDER: Bubble Chart — Holding Days vs % Gain (from exits data)
+// fetches XIRR sheet data via API action=xirr
+// ================================================================
+var bubbleRawData = null;
+
+function renderBubbleChart(exitsData, xirrData) {
+  var canvas = document.getElementById('bubbleChart');
+  if (!canvas) return;
+
+  // If xirr data already provided inline (from all API), use it directly
+  if (xirrData && xirrData.length > 0) {
+    drawBubble(xirrData);
+    return;
+  }
+
+  // Try to load XIRR data from API, fall back to exits data
+  var apiBase = API_URL.split('?')[0];
+  fetch(apiBase + '?action=xirr', { redirect: 'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (json.ok && json.data && json.data.length > 0) {
+        drawBubble(json.data);
+      } else {
+        drawBubbleFromExits(exitsData);
+      }
+    })
+    .catch(function(){ drawBubbleFromExits(exitsData); });
+}
+
+function drawBubbleFromExits(exitsData) {
+  if (!exitsData || exitsData.length === 0) return;
+  // Convert exits data: {symbol, buyPrice, sellPrice, qty, gainLoss, isGainer}
+  // We don't have holdingDays in exits directly, so use index as proxy
+  var pts = exitsData.map(function(e, i){
+    var gainPct = e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0;
+    return { symbol: e.symbol, holdDays: 30 + i * 5, gainPct: gainPct, gainLoss: e.gainLoss, isGainer: e.isGainer };
+  });
+  drawBubble(pts);
+}
+
+function drawBubble(pts) {
+  var canvas = document.getElementById('bubbleChart');
+  if (!canvas) return;
+  var isLight = document.documentElement.classList.contains('light');
+
+  // Normalize: pts can be [{symbol, holdDays, gainPct, gainLoss}]
+  // or from XIRR API: [{symbol, holdingDays, gainPct, gainLoss, ...}]
+  var parsed = pts.map(function(p){
+    return {
+      symbol:   p.symbol   || p.Symbol   || '',
+      holdDays: +(p.holdDays || p.holdingDays || p.HoldingDays || 0),
+      gainPct:  +(p.gainPct  || p.GainPct  || 0),
+      gainLoss: Math.abs(+(p.gainLoss || p.GainLoss || 0))
+    };
+  }).filter(function(p){ return p.holdDays > 0 && p.symbol; });
+
+  if (parsed.length === 0) { drawBubbleFromExits([]); return; }
+
+  // Bubble radius: proportional to gainLoss, clamped 4–28
+  var maxGL = Math.max.apply(null, parsed.map(function(p){ return p.gainLoss; })) || 1;
+  var mkBubble = function(p){
+    var r = 4 + (p.gainLoss / maxGL) * 24;
+    return { x: p.holdDays, y: Math.round(p.gainPct * 100) / 100, r: r };
+  };
+
+  var gainers = parsed.filter(function(p){ return p.gainPct >= 0; });
+  var losers  = parsed.filter(function(p){ return p.gainPct < 0; });
+
+  if (bubbleChartInst) bubbleChartInst.destroy();
+  bubbleChartInst = new Chart(canvas, {
+    type: 'bubble',
+    data: {
+      datasets: [
+        {
+          label: 'Gainers',
+          data: gainers.map(mkBubble),
+          backgroundColor: 'rgba(0,208,158,0.45)',
+          borderColor: 'rgba(0,208,158,0.8)',
+          borderWidth: 1
+        },
+        {
+          label: 'Losers',
+          data: losers.map(mkBubble),
+          backgroundColor: 'rgba(251,54,64,0.4)',
+          borderColor: 'rgba(251,54,64,0.75)',
+          borderWidth: 1
+        }
+      ]
+    },
+    plugins: [{
+      id: 'bubbleLabels',
+      afterDatasetsDraw: function(chart) {
+        var ctx2 = chart.ctx;
+        ctx2.save();
+        ctx2.font = '600 9px ' + (getComputedStyle(document.documentElement).getPropertyValue('--font') || 'sans-serif');
+        ctx2.textAlign = 'center';
+        ctx2.textBaseline = 'middle';
+        ctx2.fillStyle = isLight ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.85)';
+        var allPts = gainers.concat(losers);
+        chart.data.datasets.forEach(function(ds, di) {
+          ds.data.forEach(function(pt, pi) {
+            var meta = chart.getDatasetMeta(di);
+            if (!meta.hidden && meta.data[pi]) {
+              var el = meta.data[pi];
+              var sym = (di === 0 ? gainers[pi] : losers[pi]);
+              if (sym && sym.symbol && pt.r > 8) {
+                ctx2.fillText(sym.symbol.substring(0, 9), el.x, el.y);
+              }
+            }
+          });
+        });
+        ctx2.restore();
+      }
+    }],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: isLight ? 'rgba(0,15,8,0.6)' : 'rgba(240,237,229,0.5)', font: { size: 11, weight: '600' } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var ds = ctx.datasetIndex === 0 ? gainers : losers;
+              var p = ds[ctx.dataIndex];
+              if (!p) return '';
+              return (p.symbol || '') + ' | ' + ctx.parsed.x + 'd | ' + (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(2) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true, text: 'Holding Days',
+            color: isLight ? 'rgba(0,15,8,0.5)' : 'rgba(240,237,229,0.4)',
+            font: { size: 11, weight: '600' }
+          },
+          ticks: { color: isLight ? 'rgba(0,15,8,0.4)' : 'rgba(240,237,229,0.35)', font: { size: 10 } },
+          grid: { color: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(240,237,229,0.04)' }
+        },
+        y: {
+          title: {
+            display: true, text: '% Gain',
+            color: isLight ? 'rgba(0,15,8,0.5)' : 'rgba(240,237,229,0.4)',
+            font: { size: 11, weight: '600' }
+          },
+          ticks: {
+            color: isLight ? 'rgba(0,15,8,0.4)' : 'rgba(240,237,229,0.35)',
+            font: { size: 10 },
+            callback: function(v){ return (v >= 0 ? '+' : '') + v + '%'; }
+          },
+          grid: { color: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(240,237,229,0.04)' }
+        }
+      }
+    }
+  });
+}
+
+// ================================================================
 // RENDER: Sector donut (with distinct colors)
 // ================================================================
 function renderSector(h) {
@@ -731,10 +981,26 @@ function renderSector(h) {
 // ================================================================
 function renderPerf(data) {
   function cellClass(v) {
-    if (v > 5)  return 'perf-cell-pos-lg';
+    if (v > 10) return 'perf-cell-pos-lg';
+    if (v > 3)  return 'perf-cell-pos-lg';
     if (v > 0)  return 'perf-cell-pos-sm';
-    if (v > -5) return 'perf-cell-neg-sm';
+    if (v > -3) return 'perf-cell-neg-sm';
     return 'perf-cell-neg-lg';
+  }
+  function getCellStyle(v) {
+    if (v === null || v === undefined) return '';
+    // Dynamic intensity: stronger color for bigger moves
+    var abs = Math.abs(v);
+    var intensity = Math.min(abs / 15, 1); // max at 15%
+    if (v > 0) {
+      var alpha = 0.15 + intensity * 0.55;
+      var bright = Math.round(160 + intensity * 95);
+      return 'background:rgba(0,208,158,' + alpha.toFixed(2) + ');color:rgb(0,' + bright + ',' + Math.round(bright * 0.78) + ');';
+    } else {
+      var alpha2 = 0.15 + intensity * 0.55;
+      var rb = Math.round(200 + intensity * 55);
+      return 'background:rgba(251,54,64,' + alpha2.toFixed(2) + ');color:rgb(' + rb + ',' + Math.round(rb * 0.3) + ',' + Math.round(rb * 0.32) + ');';
+    }
   }
   function fmtV(v) { return (v > 0 ? '+' : '') + v.toFixed(2) + '%'; }
 
@@ -742,13 +1008,14 @@ function renderPerf(data) {
     var monthCells = row.months.map(function(v){
       if (v === null || v === undefined)
         return '<td class="perf-cell-empty">—</td>';
-      return '<td class="' + cellClass(v) + '">' + fmtV(v) + '</td>';
+      var dynStyle = getCellStyle(v);
+      return '<td style="' + dynStyle + '">' + fmtV(v) + '</td>';
     }).join('');
 
     var tot = row.yearTotal;
     var totCell = (tot === null || tot === undefined)
       ? '<td class="perf-cell-empty">—</td>'
-      : '<td class="' + (tot >= 0 ? 'perf-total-pos' : 'perf-total-neg') + '">' + fmtV(tot) + '</td>';
+      : '<td class="' + (tot >= 0 ? 'perf-total-pos' : 'perf-total-neg') + '" style="' + getCellStyle(tot) + '">' + fmtV(tot) + '</td>';
 
     return '<tr><td class="yr-col">' + row.year + '</td>' + monthCells + totCell + '</tr>';
   }).join('');
@@ -817,6 +1084,8 @@ function toggleTheme(){
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
   if(benchChartInst)  { benchChartInst.destroy();  benchChartInst=null; }
   if(sectorChartInst) { sectorChartInst.destroy(); sectorChartInst=null; }
+  if(ddChartInst)     { ddChartInst.destroy();     ddChartInst=null; }
+  if(bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst=null; }
   loadAll();
 }
 
