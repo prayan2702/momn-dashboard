@@ -169,6 +169,7 @@ tbody tr:last-child td{border-bottom:none}
   .two-col{grid-template-columns:1fr}
   .kpi-val{font-size:22px}
   .main-chart-grid{grid-template-columns:1fr !important}
+  .sector-idx-row{grid-template-columns:1fr !important}
 }
 @media(max-width:500px){
   .kpi-row{grid-template-columns:1fr}
@@ -225,49 +226,49 @@ tbody tr:last-child td{border-bottom:none}
 
   </div>
 
-  <!-- Main chart area: LEFT = Perf + DD stacked | RIGHT = Sector + Index table -->
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;align-items:start">
 
-    <!-- LEFT column: Performance chart + Drawdown chart -->
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div class="card">
-        <div class="card-title">
-          Performance Comparison
-          <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
-        </div>
-        <div class="bench-legend" id="benchLeg"></div>
-        <div style="position:relative;height:240px"><canvas id="navChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title" style="color:#FF6B6B;margin-bottom:8px">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B6B;margin-right:5px;flex-shrink:0;vertical-align:middle"></span>
-          DrawDown
-        </div>
-        <div style="position:relative;height:110px"><canvas id="ddChart"></canvas></div>
-      </div>
+  <!-- Performance Comparison — full width -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">
+      Performance Comparison
+      <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:none;letter-spacing:0">Rebased to 100</span>
+    </div>
+    <div class="bench-legend" id="benchLeg"></div>
+    <div style="position:relative;height:260px"><canvas id="navChart"></canvas></div>
+  </div>
+
+  <!-- Drawdown — full width -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="color:#FF6B6B;margin-bottom:8px">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B6B;margin-right:5px;flex-shrink:0;vertical-align:middle"></span>
+      DrawDown
+    </div>
+    <div style="position:relative;height:120px"><canvas id="ddChart"></canvas></div>
+  </div>
+
+  <!-- Sector Allocation + Market Indices — side by side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+
+    <div class="card">
+      <div class="card-title">Sector Allocation</div>
+      <div class="sector-legend" id="sectorLeg"></div>
+      <div style="position:relative;height:180px"><canvas id="sectorChart"></canvas></div>
     </div>
 
-    <!-- RIGHT column: Sector donut + Index table -->
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div class="card">
-        <div class="card-title">Sector Allocation</div>
-        <div class="sector-legend" id="sectorLeg"></div>
-        <div style="position:relative;height:150px"><canvas id="sectorChart"></canvas></div>
-      </div>
-      <div class="card" style="padding:16px 18px">
-        <div class="card-title" style="margin-bottom:8px">Market Indices</div>
-        <div id="idxTableWrap" style="overflow-y:auto;max-height:240px">
-          <table style="width:100%;border-collapse:collapse">
-            <thead>
-              <tr>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:left;padding:0 6px 7px 0;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--sep2)">Index</th>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 6px 7px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2)">CMP</th>
-                <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 0 7px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2)">Chg%</th>
-              </tr>
-            </thead>
-            <tbody id="idxTableBody"></tbody>
-          </table>
-        </div>
+    <div class="card" style="padding:18px 20px">
+      <div class="card-title" style="margin-bottom:10px">Market Indices</div>
+      <div id="idxTableWrap" style="overflow-y:auto;max-height:260px">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:left;padding:0 8px 8px 0;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2);white-space:nowrap">Index</th>
+              <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 8px 8px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2)">CMP</th>
+              <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 8px 8px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2);white-space:nowrap">Pt Chg</th>
+              <th style="font-size:10px;font-weight:700;color:var(--t4);text-align:right;padding:0 0 8px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--sep2);white-space:nowrap">Chg%</th>
+            </tr>
+          </thead>
+          <tbody id="idxTableBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -661,36 +662,36 @@ function renderIndexTable(indexData) {
   var tbody = document.getElementById('idxTableBody');
   if (!tbody) return;
 
-  // Build rows: API may only return nifty+nifty500 in indexData
-  // We use MOCK_INDICES_TABLE as structure and overlay live values
   var rows = MOCK_INDICES_TABLE.map(function(m) {
-    // Try to match live data
     var nm = m.name.replace(/[^A-Z0-9]/gi,'').toUpperCase();
     var live = null;
     if (indexData) {
-      if (indexData.nifty && (nm==='NIFTY50'||nm==='NIFTY_50')) live = indexData.nifty;
-      if (indexData.nifty500 && (nm==='NIFTY500'||nm==='NIFTY_500')) live = indexData.nifty500;
+      if (indexData.nifty   && (nm==='NIFTY50'  || nm==='NIFTY50'))  live = indexData.nifty;
+      if (indexData.nifty500&& (nm==='NIFTY500' || nm==='NIFTY500')) live = indexData.nifty500;
     }
     return {
-      name:    m.name,
-      cmp:     live ? live.cmp    : m.cmp,
-      pts:     live ? live.change : m.pts,
-      pct:     live ? live.changePct : m.pct
+      name: m.name,
+      cmp:  live ? live.cmp       : m.cmp,
+      pts:  live ? live.change    : m.pts,
+      pct:  live ? live.changePct : m.pct
     };
   });
 
   tbody.innerHTML = rows.map(function(r) {
-    var up = r.pct >= 0;
+    var up    = r.pct >= 0;
     var color = up ? '#00D09E' : '#FB3640';
     var sign  = up ? '+' : '';
     var cmpFmt = r.cmp >= 1000
       ? r.cmp.toLocaleString('en-IN', {maximumFractionDigits:0})
       : (+r.cmp).toFixed(r.cmp < 100 ? 1 : 0);
-    return '<tr style="border-bottom:1px solid var(--sep2)">' +
-      '<td style="padding:5px 6px 5px 0;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap">' + r.name + '</td>' +
-      '<td style="padding:5px 6px;font-size:11px;font-weight:700;color:var(--t1);text-align:right;font-variant-numeric:tabular-nums">' + cmpFmt + '</td>' +
-      '<td style="padding:5px 0;font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' +
-        sign + r.pct.toFixed(2) + '%</td>' +
+    var ptsFmt = (up ? '+' : '') + (+r.pts).toLocaleString('en-IN', {maximumFractionDigits:1});
+    var td = 'style="padding:6px 0;border-bottom:1px solid var(--sep2)"';
+    var num = ';font-variant-numeric:tabular-nums';
+    return '<tr>' +
+      '<td ' + td + ' style="padding:6px 8px 6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap">' + r.name + '</td>' +
+      '<td style="padding:6px 8px;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:var(--t1);text-align:right' + num + '">' + cmpFmt + '</td>' +
+      '<td style="padding:6px 8px;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:' + color + ';text-align:right' + num + ';white-space:nowrap">' + ptsFmt + '</td>' +
+      '<td style="padding:6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:' + color + ';text-align:right' + num + ';white-space:nowrap">' + sign + r.pct.toFixed(2) + '%</td>' +
     '</tr>';
   }).join('');
 }
@@ -893,28 +894,36 @@ function renderBubbleChart(exitsData, xirrData) {
   var canvas = document.getElementById('bubbleChart');
   if (!canvas) return;
 
-  // 1. Best case: xirr data from 'all' API call
+  // 1. Best: xirr data inline from 'all' API
   if (xirrData && xirrData.length > 0) {
+    console.log('Bubble: using inline xirr data, count=', xirrData.length, 'sample=', JSON.stringify(xirrData[0]));
     drawBubble(xirrData); return;
   }
 
   // 2. Try separate xirr API call
   var apiBase = API_URL.split('?')[0];
+  console.log('Bubble: fetching xirr from', apiBase + '?action=xirr');
   fetch(apiBase + '?action=xirr', { redirect: 'follow' })
     .then(function(r){ return r.json(); })
     .then(function(json){
+      console.log('Bubble xirr API ok=', json.ok, 'count=', json.data ? json.data.length : 0);
       if (json.ok && json.data && json.data.length > 0) {
+        console.log('Bubble: xirr sample=', JSON.stringify(json.data[0]));
         drawBubble(json.data);
       } else {
+        console.log('Bubble: xirr empty, falling back to exits. exits count=', exitsData ? exitsData.length : 0);
         drawBubbleFromExits(exitsData);
       }
     })
-    .catch(function(){ drawBubbleFromExits(exitsData); });
+    .catch(function(err){
+      console.warn('Bubble: xirr fetch failed:', err.message, '— using exits');
+      drawBubbleFromExits(exitsData);
+    });
 }
 
 function drawBubbleFromExits(exitsData) {
-  // If exits also empty, use MOCK exits so chart is never blank
   var src = (exitsData && exitsData.length > 0) ? exitsData : MOCK_EXITS;
+  console.log('Bubble drawBubbleFromExits: src count=', src.length, src === MOCK_EXITS ? '(MOCK)' : '(real exits)');
   var pts = src.map(function(e, i){
     var gainPct = e.gainPct !== undefined ? e.gainPct
                 : (e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0);
@@ -929,18 +938,20 @@ function drawBubble(pts) {
   if (!canvas) return;
   var isLight = document.documentElement.classList.contains('light');
 
-  // Normalize: pts can be [{symbol, holdDays, gainPct, gainLoss}]
-  // or from XIRR API: [{symbol, holdingDays, gainPct, gainLoss, ...}]
+  // Normalize field names — XIRR sheet cols L:O may come as any of these
   var parsed = pts.map(function(p){
-    return {
-      symbol:   p.symbol   || p.Symbol   || '',
-      holdDays: +(p.holdDays || p.holdingDays || p.HoldingDays || 0),
-      gainPct:  +(p.gainPct  || p.GainPct  || 0),
-      gainLoss: Math.abs(+(p.gainLoss || p.GainLoss || 0))
-    };
+    var sym  = p.symbol   || p.Symbol   || p.SYMBOL   || p.name || '';
+    var days = +(p.holdDays || p.holdingDays || p.HoldingDays || p.hold_days || p.days || 0);
+    var gpct = +(p.gainPct  || p.GainPct    || p.gain_pct    || p.gainpct  || p.pct  || 0);
+    var gl   = Math.abs(+(p.gainLoss || p.GainLoss || p.gain_loss || p.gainloss || p.gl || 0));
+    return { symbol: sym.toString().trim(), holdDays: days, gainPct: gpct, gainLoss: gl };
   }).filter(function(p){ return p.holdDays > 0 && p.symbol; });
 
-  if (parsed.length === 0) { drawBubbleFromExits([]); return; }
+  console.log('drawBubble: parsed', parsed.length, 'points. Sample:', parsed.length ? JSON.stringify(parsed[0]) : 'none');
+  if (parsed.length === 0) {
+    // Last resort: draw MOCK so chart is never blank
+    parsed = MOCK_EXITS.map(function(e){ return { symbol:e.symbol, holdDays:e.holdDays, gainPct:e.gainPct, gainLoss:Math.abs(e.gainLoss) }; });
+  }
 
   // Bubble radius: proportional to gainLoss, clamped 4–28
   var maxGL = Math.max.apply(null, parsed.map(function(p){ return p.gainLoss; })) || 1;
