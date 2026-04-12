@@ -569,48 +569,49 @@ function renderIndexCard(indexData) {
 }
 
 // ================================================================
-// RENDER: Full Index Table (in right column below sector donut)
-// Data comes from DashBoard sheet (same source as top KPI card)
 // ================================================================
-// RENDER: Full Index Table — live API data only
-// ================================================================
+// RENDER: Full Index Table — uses indexData.table from new Code.gs
 // ================================================================
 function renderIndexTable(indexData) {
   var tbody = document.getElementById('idxTableBody');
   if (!tbody) return;
 
-  // Only show rows where we have live API data
-  // For now API returns nifty + nifty500 — rest show as name-only with blank values
-  var liveRows = [];
-  if (indexData && indexData.nifty && indexData.nifty.cmp) {
-    liveRows.push({ name:'NIFTY_50',  cmp:indexData.nifty.cmp,    pts:indexData.nifty.change,    pct:indexData.nifty.changePct });
-  }
-  if (indexData && indexData.nifty500 && indexData.nifty500.cmp) {
-    liveRows.push({ name:'NIFTY_500', cmp:indexData.nifty500.cmp, pts:indexData.nifty500.change, pct:indexData.nifty500.changePct });
+  // New Code.gs returns indexData.table = full array of all indices
+  var rows = (indexData && indexData.table && indexData.table.length > 0)
+    ? indexData.table : [];
+
+  // Fallback: old API only returned nifty + nifty500
+  if (rows.length === 0 && indexData) {
+    if (indexData.nifty    && indexData.nifty.cmp)    rows.push({ name:'NIFTY_50',  cmp:indexData.nifty.cmp,    change:indexData.nifty.change,    changePct:indexData.nifty.changePct });
+    if (indexData.nifty500 && indexData.nifty500.cmp) rows.push({ name:'NIFTY_500', cmp:indexData.nifty500.cmp, change:indexData.nifty500.change, changePct:indexData.nifty500.changePct });
   }
 
-  // If no live data at all — show empty state
-  if (liveRows.length === 0) {
+  if (rows.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="padding:16px 0;font-size:11px;color:var(--t4);text-align:center">No index data — check API</td></tr>';
     return;
   }
 
-  tbody.innerHTML = liveRows.map(function(r) {
-    var up    = r.pct >= 0;
+  tbody.innerHTML = rows.map(function(r) {
+    var pct   = r.changePct || 0;
+    var pts   = r.change    || 0;
+    var up    = pct >= 0;
     var color = up ? '#00D09E' : '#FB3640';
     var sign  = up ? '+' : '';
-    var cmpFmt = r.cmp >= 1000
-      ? r.cmp.toLocaleString('en-IN', {maximumFractionDigits:0})
-      : (+r.cmp).toFixed(r.cmp < 100 ? 1 : 0);
-    var ptsFmt = (up ? '+' : '') + (+r.pts).toLocaleString('en-IN', {maximumFractionDigits:1});
+    var cmpVal = r.cmp || 0;
+    var cmpFmt = cmpVal >= 1000
+      ? cmpVal.toLocaleString('en-IN', {maximumFractionDigits:0})
+      : (+cmpVal).toFixed(cmpVal < 100 ? 1 : 0);
+    var ptsFmt = (pts >= 0 ? '+' : '') + (+pts).toLocaleString('en-IN', {maximumFractionDigits:1});
+    var bdr = 'border-bottom:1px solid var(--sep2)';
     return '<tr>' +
-      '<td style="padding:6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.name + '</td>' +
-      '<td style="padding:6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:var(--t1);text-align:right;font-variant-numeric:tabular-nums">' + cmpFmt + '</td>' +
-      '<td style="padding:6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' + ptsFmt + '</td>' +
-      '<td style="padding:6px 0;border-bottom:1px solid var(--sep2);font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' + sign + r.pct.toFixed(2) + '%</td>' +
+      '<td style="padding:5px 0;' + bdr + ';font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (r.name||'') + '</td>' +
+      '<td style="padding:5px 0;' + bdr + ';font-size:11px;font-weight:700;color:var(--t1);text-align:right;font-variant-numeric:tabular-nums">' + cmpFmt + '</td>' +
+      '<td style="padding:5px 0;' + bdr + ';font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' + ptsFmt + '</td>' +
+      '<td style="padding:5px 0;' + bdr + ';font-size:11px;font-weight:700;color:' + color + ';text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">' + sign + pct.toFixed(2) + '%</td>' +
     '</tr>';
   }).join('');
 }
+
 
 // ================================================================
 // RENDER: Benchmark Comparison Chart
@@ -803,6 +804,7 @@ function renderDDChart(benchData) {
 
 // ================================================================
 // RENDER: Bubble Chart — Holding Days vs % Gain
+// Primary source: exits data (from Exits sheet, now includes holdDays + gainPct)
 // ================================================================
 var bubbleRawData = null;
 
@@ -810,13 +812,21 @@ function renderBubbleChart(exitsData, xirrData) {
   var canvas = document.getElementById('bubbleChart');
   if (!canvas) return;
 
-  // 1. Best: xirr data inline from 'all' API
-  if (xirrData && xirrData.length > 0) {
-    console.log('Bubble: inline xirr count=', xirrData.length, 'sample=', JSON.stringify(xirrData[0]));
-    drawBubble(xirrData); return;
+  // Priority 1: exits data (fast, reliable, from Exits sheet)
+  if (exitsData && exitsData.length > 0) {
+    console.log('Bubble: using exits data, count=', exitsData.length, 'sample=', JSON.stringify(exitsData[0]));
+    drawBubbleFromExits(exitsData);
+    return;
   }
 
-  // 2. Try separate xirr API call
+  // Priority 2: xirr inline data (if exits empty)
+  if (xirrData && xirrData.length > 0) {
+    console.log('Bubble: using inline xirr count=', xirrData.length);
+    drawBubble(xirrData);
+    return;
+  }
+
+  // Priority 3: separate XIRR API call (last resort)
   var apiBase = API_URL.split('?')[0];
   fetch(apiBase + '?action=xirr', { redirect: 'follow' })
     .then(function(r){ return r.json(); })
@@ -825,38 +835,40 @@ function renderBubbleChart(exitsData, xirrData) {
       if (json.ok && json.data && json.data.length > 0) {
         drawBubble(json.data);
       } else {
-        // 3. Try exits data
-        drawBubbleFromExits(exitsData);
+        drawBubbleFromExits([]);  // show empty state
       }
     })
     .catch(function(err){
-      console.warn('Bubble xirr fetch failed:', err.message);
-      drawBubbleFromExits(exitsData);
+      console.warn('Bubble: all sources failed:', err.message);
+      drawBubbleFromExits([]);
     });
 }
 
 function drawBubbleFromExits(exitsData) {
   if (!exitsData || exitsData.length === 0) {
-    // Show empty state — no mock
     var canvas = document.getElementById('bubbleChart');
     var wrap = canvas && canvas.parentElement;
     if (wrap) {
       wrap.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--t4)">' +
         '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
         '<span style="font-size:12px;font-weight:600">No exits data</span>' +
-        '<span style="font-size:11px">XIRR sheet data not found — check Code.gs getXirrData()</span>' +
+        '<span style="font-size:11px;text-align:center">Exits sheet empty or Code.gs not deployed</span>' +
         '</div>';
     }
     return;
   }
-  var pts = exitsData.map(function(e, i){
-    var gainPct = e.gainPct !== undefined ? e.gainPct
-                : (e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0);
-    var holdDays = e.holdDays || (20 + i * 12);
-    return { symbol: e.symbol, holdDays: holdDays, gainPct: gainPct, gainLoss: Math.abs(e.gainLoss || 0) };
-  });
+  // New Code.gs provides holdDays and gainPct directly in exits
+  var pts = exitsData.map(function(e) {
+    return {
+      symbol:   e.symbol,
+      holdDays: e.holdDays  || 0,
+      gainPct:  e.gainPct   !== undefined ? e.gainPct : (e.buyPrice > 0 ? Math.round((e.sellPrice - e.buyPrice) / e.buyPrice * 10000) / 100 : 0),
+      gainLoss: Math.abs(e.gainLoss || 0)
+    };
+  }).filter(function(p){ return p.symbol; });
   drawBubble(pts);
 }
+
 
 function drawBubble(pts) {
   var canvas = document.getElementById('bubbleChart');
