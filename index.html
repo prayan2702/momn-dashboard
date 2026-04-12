@@ -299,7 +299,7 @@ tbody tr:last-child td{border-bottom:none}
   <!-- Bubble Chart: Holding Days vs % Gain -->
   <div class="card" style="margin-bottom:16px">
     <div class="card-title">Holding Days vs % Gain
-      <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0;margin-left:8px">Exits · bubble size = gain/loss ₹</span>
+      <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0;margin-left:8px">XIRR positions · bubble size = |gain%|</span>
     </div>
     <div style="position:relative;height:360px"><canvas id="bubbleChart"></canvas></div>
   </div>
@@ -410,33 +410,52 @@ async function loadAll() {
     var json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'API error');
     renderAll(json.data);
-    // Always fetch full index table separately — buildDashboardData's indexData.table
-    // may be empty if an older GAS deployment is serving the 'all' response.
-    loadIndicesSeparately();
   } catch(e) {
     console.error('API fetch failed:', e.message);
     setStatus('err', 'API Error: ' + e.message);
-    renderAll(null);   // render zero/blank state — no mock
+    renderAll(null);
   }
+  // Always fire these separately — independent of 'all' response version
+  loadIndicesSeparately();
+  loadXirrBubble();
 }
 
-// Fetches ?action=indices separately and repopulates both the KPI card
-// and the full index table — resilient to old GAS deployments.
+// Fetches all 15 indices directly via ?action=indices
+// — works even if older GAS deployment omits indexData.table in 'all' response
 function loadIndicesSeparately() {
   var apiBase = API_URL.split('?')[0];
   fetch(apiBase + '?action=indices', { redirect: 'follow' })
     .then(function(r){ return r.json(); })
     .then(function(json){
       if (json.ok && json.data) {
-        var idxData = json.data;
-        // Repopulate the full index table
-        renderIndexTable(idxData);
-        // Repopulate the KPI strip index card (nifty + nifty500)
-        renderIndexCard(idxData);
-        console.log('Indices reloaded: table rows=', idxData.table ? idxData.table.length : 0);
+        renderIndexTable(json.data);
+        renderIndexCard(json.data);
+        console.log('Indices loaded:', json.data.table ? json.data.table.length : 0, 'rows');
       }
     })
-    .catch(function(e){ console.warn('Indices separate fetch failed:', e.message); });
+    .catch(function(e){ console.warn('loadIndicesSeparately failed:', e.message); });
+}
+
+// Fetches XIRR data directly via ?action=xirr and draws bubble chart
+// — Exits sheet holdDays are all 0 (no buyDate column), so always use XIRR sheet
+function loadXirrBubble() {
+  var apiBase = API_URL.split('?')[0];
+  fetch(apiBase + '?action=xirr', { redirect: 'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (json.ok && json.data && json.data.length > 0) {
+        console.log('XIRR bubble data:', json.data.length, 'records');
+        if (typeof Chart !== 'undefined') {
+          drawBubble(json.data);
+        } else {
+          // Chart.js not loaded yet — wait and retry once
+          setTimeout(function(){ if(typeof Chart !== 'undefined') drawBubble(json.data); }, 2000);
+        }
+      } else {
+        console.warn('XIRR API returned empty:', json);
+      }
+    })
+    .catch(function(e){ console.warn('loadXirrBubble failed:', e.message); });
 }
 
 function renderAll(data) {
@@ -826,47 +845,21 @@ function renderDDChart(benchData) {
 
 // ================================================================
 // RENDER: Bubble Chart — Holding Days vs % Gain
-// Primary source: exits data (from Exits sheet, now includes holdDays + gainPct)
+// Data source: XIRR sheet cols L:O (Symbol / BuyDate / HoldingDays / Gain%)
+// Exits sheet is NOT used — holdDays=0 for all exits (no buyDate column filled).
+// Actual draw happens via loadXirrBubble() called in loadAll().
+// This stub handles the inline xirr array passed from renderAll as a bonus fallback.
 // ================================================================
 var bubbleRawData = null;
 
 function renderBubbleChart(exitsData, xirrData) {
-  var canvas = document.getElementById('bubbleChart');
-  if (!canvas) return;
-
-  // Priority 1: exits data — only use if at least some entries have valid holdDays > 0
-  // (holdDays=0 means buyDate was missing in Exits sheet — useless for the chart)
-  var validExits = (exitsData || []).filter(function(e){ return (e.holdDays || 0) > 0; });
-  if (validExits.length > 0) {
-    console.log('Bubble: using exits data, valid count=', validExits.length, 'of', (exitsData||[]).length);
-    drawBubbleFromExits(validExits);
-    return;
-  }
-
-  // Priority 2: xirr inline data (XIRR sheet cols L:O — Symbol/BuyDate/HoldingDays/Gain%)
-  // Used when exits all have holdDays=0 (buyDate column empty in Exits sheet)
+  // loadXirrBubble() already fired — it will draw the chart when data arrives.
+  // If xirrData was included in the 'all' response, draw immediately as a bonus.
   if (xirrData && xirrData.length > 0) {
-    console.log('Bubble: exits holdDays all 0 — falling back to XIRR data, count=', xirrData.length);
-    drawBubble(xirrData);
-    return;
+    console.log('Bubble: inline XIRR from all-response, count=', xirrData.length);
+    if (typeof Chart !== 'undefined') drawBubble(xirrData);
   }
-
-  // Priority 3: separate XIRR API call (last resort)
-  var apiBase = API_URL.split('?')[0];
-  fetch(apiBase + '?action=xirr', { redirect: 'follow' })
-    .then(function(r){ return r.json(); })
-    .then(function(json){
-      console.log('Bubble xirr API: ok=', json.ok, 'count=', json.data ? json.data.length : 0);
-      if (json.ok && json.data && json.data.length > 0) {
-        drawBubble(json.data);
-      } else {
-        drawBubbleFromExits([]);  // show empty state
-      }
-    })
-    .catch(function(err){
-      console.warn('Bubble: all sources failed:', err.message);
-      drawBubbleFromExits([]);
-    });
+  // Otherwise loadXirrBubble() handles it — do nothing here.
 }
 
 function drawBubbleFromExits(exitsData) {
