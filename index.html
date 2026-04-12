@@ -347,7 +347,6 @@ tbody tr:last-child td{border-bottom:none}
 // CONFIG
 // ================================================================
 var API_URL = 'https://script.google.com/macros/s/AKfycbxrNjfMfHFgSV6RJ1I6tzQlvnti2mgeo5QWotx8gdtC_cutGZmuTuWac8KladpxSGP8UQ/exec';
-var MOCK_MODE = false;
 
 // ================================================================
 // BENCHMARK SERIES CONFIG
@@ -378,111 +377,14 @@ var SECTOR_COLORS = [
 ];
 
 // ================================================================
-// MOCK DATA (used when API not connected / as fallback)
+// INDEX TABLE STRUCTURE — names only, values come from API
+// (no mock values — 0/blank shown when API not connected)
 // ================================================================
-var MOCK = {
-  portfolio: {
-    summary: {
-      xirr: -5.22,
-      todayGain: -22094,
-      stockCount: 26
-    },
-    holdings: [
-      {symbol:'CUPID',    cmp:76,   todayPct:-6.45, currentVal:169100, gainPct:114.85, posSize:6.44, cap:'Micro', sector:'Consumer Discretionary'},
-      {symbol:'MTARTECH', cmp:3385, todayPct:-3.67, currentVal:125245, gainPct:36.88,  posSize:4.76, cap:'Micro', sector:'Industrials'},
-      {symbol:'FORCEMOT', cmp:20250,todayPct:-6.08, currentVal:121500, gainPct:27.48,  posSize:4.62, cap:'Small', sector:'Industrials'},
-      {symbol:'NATIONALUM',cmp:386, todayPct:-5.55, currentVal:107308, gainPct:23.35,  posSize:4.08, cap:'Mid',   sector:'Materials'},
-      {symbol:'MCX',      cmp:2499, todayPct:-1.08, currentVal:99960,  gainPct:22.57,  posSize:3.80, cap:'Mid',   sector:'Financials'},
-      {symbol:'LUMAXTECH',cmp:1442, todayPct:3.55,  currentVal:106708, gainPct:20.86,  posSize:4.06, cap:'Micro', sector:'Consumer Discretionary'},
-      {symbol:'SHRIRAMFIN',cmp:1006,todayPct:-2.50, currentVal:99594,  gainPct:18.13,  posSize:3.79, cap:'Large', sector:'Financials'},
-      {symbol:'SBIN',     cmp:1046, todayPct:-3.61, currentVal:91002,  gainPct:7.63,   posSize:3.46, cap:'Large', sector:'Financials'},
-      {symbol:'FEDERALBNK',cmp:263, todayPct:-2.72, currentVal:86264,  gainPct:2.52,   posSize:3.28, cap:'Mid',   sector:'Financials'},
-      {symbol:'INDIANB',  cmp:874,  todayPct:-3.91, currentVal:90896,  gainPct:-0.46,  posSize:3.46, cap:'Large', sector:'Financials'},
-      {symbol:'AUBANK',   cmp:885,  todayPct:-1.93, currentVal:78765,  gainPct:-6.93,  posSize:2.99, cap:'Mid',   sector:'Financials'},
-      {symbol:'ASHOKLEY', cmp:171,  todayPct:-4.19, currentVal:80883,  gainPct:-7.34,  posSize:3.08, cap:'Mid',   sector:'Industrials'},
-      {symbol:'ABCAPITAL',cmp:310,  todayPct:-3.09, currentVal:73470,  gainPct:-12.91, posSize:2.79, cap:'Mid',   sector:'Financials'},
-      {symbol:'JKTYRE',   cmp:413,  todayPct:-4.20, currentVal:65254,  gainPct:-20.39, posSize:2.48, cap:'Micro', sector:'Consumer Discretionary'},
-      {symbol:'SILVERTUC',cmp:111,  todayPct:-4.99, currentVal:64380,  gainPct:-22.83, posSize:2.34, cap:'Micro', sector:'Technology'},
-      {symbol:'RMDRIP',   cmp:40,   todayPct:-5.00, currentVal:30760,  gainPct:-62.80, posSize:1.17, cap:'Micro', sector:'Industrials'},
-    ]
-  },
-  benchmarking: {
-    rows: (function(){
-      var raw = [
-        {d:'05-Mar-25',m:100.00, n5:100.00, n500:100.00, sml:100.00, mon:100.00, a50:100.00},
-        {d:'10-Mar-25',m:100.34, n5:100.55, n500:100.05, sml:100.24, mon:97.69,  a50:98.74},
-        {d:'17-Mar-25',m:102.43, n5:100.77, n500:100.16, sml:98.42,  mon:97.90,  a50:98.39},
-        {d:'24-Mar-25',m:108.07, n5:105.91, n500:106.33, sml:107.44, mon:104.15, a50:109.11},
-        {d:'07-Apr-25',m:97.98,  n5:99.21,  n500:99.26,  sml:98.73,  mon:98.29,  a50:98.79},
-        {d:'30-Apr-25',m:104.03, n5:108.94, n500:108.76, sml:106.43, mon:107.20, a50:108.47},
-        {d:'30-May-25',m:106.78, n5:110.80, n500:112.57, sml:117.68, mon:111.48, a50:116.72},
-        {d:'30-Jun-25',m:112.52, n5:114.24, n500:116.59, sml:122.80, mon:116.26, a50:122.41},
-        {d:'31-Jul-25',m:111.29, n5:110.88, n500:113.12, sml:119.95, mon:110.70, a50:118.50},
-        {d:'29-Aug-25',m:109.56, n5:109.35, n500:110.89, sml:115.52, mon:108.78, a50:111.88},
-        {d:'30-Sep-25',m:109.43, n5:110.18, n500:112.26, sml:117.19, mon:109.02, a50:112.19},
-        {d:'31-Oct-25',m:110.92, n5:115.15, n500:117.70, sml:120.97, mon:115.58, a50:116.17},
-        {d:'28-Nov-25',m:111.20, n5:117.31, n500:118.22, sml:116.87, mon:115.02, a50:118.52},
-        {d:'31-Dec-25',m:115.59, n5:116.98, n500:116.85, sml:115.69, mon:112.48, a50:114.16},
-        {d:'30-Jan-26',m:111.22, n5:113.36, n500:114.21, sml:null,   mon:113.55, a50:110.65},
-        {d:'12-Feb-26',m:118.42, n5:116.19, n500:117.26, sml:null,   mon:113.12, a50:115.34},
-        {d:'27-Feb-26',m:114.99, n5:112.72, n500:115.76, sml:null,   mon:101.82, a50:116.72},
-        {d:'17-Mar-26',m:104.82, n5:105.57, n500:106.13, sml:null,   mon:null,   a50:106.33},
-        {d:'27-Mar-26',m:102.44, n5:102.16, n500:106.03, sml:null,   mon:null,   a50:107.40},
-      ];
-      return raw.map(function(r){
-        return {date:r.d, momnPF:r.m, nse50:r.n5, nse500:r.n500,
-                bseSmlcap:r.sml, n200Momn30:r.mon, alpha50:r.a50};
-      });
-    }()),
-    currentNav: 99.82,
-    maxNav: 118.42,
-    currentDD: -15.71,
-    maxDD: -16.06
-  },
-  indexData: {
-    nifty:   { name:'NIFTY 50',  cmp:22820, prevClose:23306, change:-487,  changePct:-2.09 },
-    nifty500:{ name:'NIFTY 500', cmp:21020, prevClose:21478, change:-458,  changePct:-2.13 }
-  },
-  performance: [
-    {year:2025, months:[null,null,5.93,-1.79,2.64,5.37,-1.10,-1.55,-0.12,1.36,0.25,3.95], yearTotal:15.59},
-    {year:2026, months:[-3.78,3.38,-11.22,null,null,null,null,null,null,null,null,null],    yearTotal:-11.68}
-  ]
-};
-
-// MOCK exits for bubble chart fallback (screenshot se liya)
-var MOCK_EXITS = [
-  {symbol:'CUPID',     holdDays:248, gainPct:162.3,  gainLoss:98500},
-  {symbol:'MTARTECH',  holdDays:152, gainPct:73.4,   gainLoss:52000},
-  {symbol:'FORCEMOT',  holdDays:375, gainPct:38.2,   gainLoss:45000},
-  {symbol:'LUMAXTECH', holdDays:285, gainPct:55.6,   gainLoss:59000},
-  {symbol:'NATIONALUM',holdDays:98,  gainPct:28.4,   gainLoss:25000},
-  {symbol:'MCX',       holdDays:134, gainPct:31.2,   gainLoss:31200},
-  {symbol:'SEAMECLTD', holdDays:62,  gainPct:12.1,   gainLoss:8500},
-  {symbol:'TMB',       holdDays:68,  gainPct:8.3,    gainLoss:5200},
-  {symbol:'SHGRAMFIN', holdDays:138, gainPct:5.1,    gainLoss:4800},
-  {symbol:'FEDERALBNK',holdDays:140, gainPct:2.9,    gainLoss:2500},
-  {symbol:'INDIANB',   holdDays:158, gainPct:-1.2,   gainLoss:1100},
-  {symbol:'BAJAJCON',  holdDays:35,  gainPct:-4.3,   gainLoss:3800},
-  {symbol:'SANSERA',   holdDays:42,  gainPct:-6.7,   gainLoss:5900},
-  {symbol:'JKTYRE',    holdDays:28,  gainPct:-18.4,  gainLoss:12000},
-  {symbol:'AUBANK',    holdDays:145, gainPct:-8.1,   gainLoss:7200},
-];
-
-// MOCK full index table data
-var MOCK_INDICES_TABLE = [
-  {name:'NIFTY_50',    cmp:24051, prev:23775, pts:276,  pct:1.16},
-  {name:'SENSEX',      cmp:77550, prev:76632, pts:919,  pct:1.20},
-  {name:'INDIA_VIX',   cmp:18.9,  prev:20.4,  pts:-1.6, pct:-7.72},
-  {name:'NIFTY_100',   cmp:24810, prev:24487, pts:323,  pct:1.32},
-  {name:'BSE-SMLCAP',  cmp:7640,  prev:7516,  pts:124,  pct:1.64},
-  {name:'BSE-MIDCAP',  cmp:16418, prev:16176, pts:242,  pct:1.50},
-  {name:'NIFTY_200',   cmp:13581, prev:13399, pts:182,  pct:1.36},
-  {name:'NIFTY_500',   cmp:22347, prev:22038, pts:309,  pct:1.40},
-  {name:'GOLDBEES',    cmp:124,   prev:123,   pts:0.4,  pct:0.32},
-  {name:'S&P 500',     cmp:6817,  prev:6825,  pts:-8,   pct:-0.11},
-  {name:'NASDAQ',      cmp:22903, prev:22822, pts:80,   pct:0.35},
-  {name:'Hang Seng',   cmp:25894, prev:25752, pts:141,  pct:0.55},
-  {name:'Nikkei',      cmp:56924, prev:55895, pts:1029, pct:1.84},
+var INDICES_TABLE_NAMES = [
+  'NIFTY_50','SENSEX','INDIA_VIX','NIFTY_100',
+  'BSE-SMLCAP','BSE-MIDCAP','NIFTY_NEXT_50','NIFTY_200',
+  'NIFTY_500','NIFTY_MIDCAP_50','GOLDBEES',
+  'S&P 500','NASDAQ','Hang Seng','Nikkei'
 ];
 
 // ================================================================
@@ -504,51 +406,50 @@ async function loadAll() {
   if (ovTxt) ovTxt.textContent = 'Loading...';
   document.getElementById('overlay').classList.remove('hide');
   try {
-    var data;
-    if (MOCK_MODE || API_URL.includes('YOUR_DEPLOYMENT_ID')) {
-      data = MOCK;
-    } else {
-      try {
-        var resp = await fetch(API_URL + '?action=all', { redirect:'follow' });
-        var json = await resp.json();
-        if (!json.ok) throw new Error(json.error || 'API error');
-        data = json.data;
-      } catch(apiErr) {
-        console.error('API fetch failed, using mock:', apiErr.message);
-        data = MOCK;
-        setStatus('err', 'API error — showing cached data');
-      }
-    }
-    renderAll(data);
+    var resp = await fetch(API_URL + '?action=all', { redirect:'follow' });
+    var json = await resp.json();
+    if (!json.ok) throw new Error(json.error || 'API error');
+    renderAll(json.data);
   } catch(e) {
-    setStatus('err', 'Error: ' + e.message);
-    var ovElErr = document.getElementById('overlay');
-    if (ovElErr) ovElErr.classList.add('hide');
+    console.error('API fetch failed:', e.message);
+    setStatus('err', 'API Error: ' + e.message);
+    renderAll(null);   // render zero/blank state — no mock
   }
 }
 
 function renderAll(data) {
-  // Debug: log what API actually returned
-  console.log('API response - benchmarking rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 'MISSING');
-  console.log('API response - indexData nifty cmp:', data.indexData && data.indexData.nifty ? data.indexData.nifty.cmp : 'MISSING');
-  console.log('API response - summary:', data.portfolio && data.portfolio.summary ? JSON.stringify(data.portfolio.summary) : 'MISSING');
+  // data = null means API failed — render blank/zero everywhere
+  if (!data) {
+    data = {
+      portfolio:    { summary:{}, holdings:[] },
+      benchmarking: { rows:[], currentNav:0, maxNav:0, currentDD:0, maxDD:0 },
+      indexData:    {},
+      performance:  [],
+      exits:        [],
+      xirr:         []
+    };
+  }
 
-  // Fallback to MOCK benchmarking if API data is missing or empty
+  console.log('renderAll — bench rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 0,
+              '| holdings:', data.portfolio && data.portfolio.holdings ? data.portfolio.holdings.length : 0,
+              '| xirr:', data.xirr ? data.xirr.length : 0);
+
   var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
-    ? data.benchmarking : MOCK.benchmarking;
+    ? data.benchmarking
+    : { rows:[], currentNav:0, maxNav:0, currentDD:0, maxDD:0 };
 
-  renderKPIs(data.portfolio.summary, data.indexData, bench);
-  renderPerf(data.performance);
-  renderIndexTable(data.indexData);
-  holdings = data.portfolio.holdings;
+  renderKPIs(data.portfolio.summary || {}, data.indexData || {}, bench);
+  renderPerf(data.performance || []);
+  renderIndexTable(data.indexData || {});
+  holdings = data.portfolio.holdings || [];
   renderTable();
   renderTopGL();
 
   if (typeof Chart !== 'undefined') {
-    try { renderBenchmarkChart(bench); }           catch(e){ console.warn('Bench chart:', e.message); }
-    try { renderSector(data.portfolio.holdings); } catch(e){ console.warn('Sector:', e.message); }
-    try { renderDDChart(bench); }                  catch(e){ console.warn('DD chart:', e.message); }
-    try { renderBubbleChart(data.exits, data.xirr); } catch(e){ console.warn('Bubble chart:', e.message); }
+    try { renderBenchmarkChart(bench); }                        catch(e){ console.warn('Bench chart:', e.message); }
+    try { renderSector(data.portfolio.holdings || []); }        catch(e){ console.warn('Sector:', e.message); }
+    try { renderDDChart(bench); }                               catch(e){ console.warn('DD chart:', e.message); }
+    try { renderBubbleChart(data.exits || [], data.xirr || []); } catch(e){ console.warn('Bubble chart:', e.message); }
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
@@ -633,7 +534,6 @@ function renderKPIs(s, indexData, benchData) {
 }
 
 function renderIndexCard(indexData) {
-  // Skip if no data or cmp is 0 (API returned empty) — keep mock values showing
   if (!indexData) return;
 
   function setIdx(cmpId, ptsId, chgId, data) {
@@ -641,7 +541,15 @@ function renderIndexCard(indexData) {
     var ptsEl = document.getElementById(ptsId);
     var chgEl = document.getElementById(chgId);
     if (!cmpEl || !chgEl) return;
-    if (!data || !data.cmp || data.cmp === 0) return; // keep showing existing value
+    if (!data || !data.cmp || data.cmp === 0) {
+      // No live data — show blank, not stale/mock values
+      cmpEl.textContent = '—';
+      if (ptsEl) { ptsEl.textContent = ''; ptsEl.style.color = ''; }
+      chgEl.textContent = '—';
+      chgEl.style.background = '';
+      chgEl.style.color = 'var(--t4)';
+      return;
+    }
     var cmp  = n(data.cmp);
     var pts  = n(data.change);
     var pct  = n(data.changePct);
@@ -663,28 +571,31 @@ function renderIndexCard(indexData) {
 // ================================================================
 // RENDER: Full Index Table (in right column below sector donut)
 // Data comes from DashBoard sheet (same source as top KPI card)
-// Falls back to MOCK_INDICES_TABLE when API doesn't return full list
+// ================================================================
+// RENDER: Full Index Table — live API data only
+// ================================================================
 // ================================================================
 function renderIndexTable(indexData) {
   var tbody = document.getElementById('idxTableBody');
   if (!tbody) return;
 
-  var rows = MOCK_INDICES_TABLE.map(function(m) {
-    var nm = m.name.replace(/[^A-Z0-9]/gi,'').toUpperCase();
-    var live = null;
-    if (indexData) {
-      if (indexData.nifty   && (nm==='NIFTY50'  || nm==='NIFTY50'))  live = indexData.nifty;
-      if (indexData.nifty500&& (nm==='NIFTY500' || nm==='NIFTY500')) live = indexData.nifty500;
-    }
-    return {
-      name: m.name,
-      cmp:  live ? live.cmp       : m.cmp,
-      pts:  live ? live.change    : m.pts,
-      pct:  live ? live.changePct : m.pct
-    };
-  });
+  // Only show rows where we have live API data
+  // For now API returns nifty + nifty500 — rest show as name-only with blank values
+  var liveRows = [];
+  if (indexData && indexData.nifty && indexData.nifty.cmp) {
+    liveRows.push({ name:'NIFTY_50',  cmp:indexData.nifty.cmp,    pts:indexData.nifty.change,    pct:indexData.nifty.changePct });
+  }
+  if (indexData && indexData.nifty500 && indexData.nifty500.cmp) {
+    liveRows.push({ name:'NIFTY_500', cmp:indexData.nifty500.cmp, pts:indexData.nifty500.change, pct:indexData.nifty500.changePct });
+  }
 
-  tbody.innerHTML = rows.map(function(r) {
+  // If no live data at all — show empty state
+  if (liveRows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px 0;font-size:11px;color:var(--t4);text-align:center">No index data — check API</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = liveRows.map(function(r) {
     var up    = r.pct >= 0;
     var color = up ? '#00D09E' : '#FB3640';
     var sign  = up ? '+' : '';
@@ -901,35 +812,44 @@ function renderBubbleChart(exitsData, xirrData) {
 
   // 1. Best: xirr data inline from 'all' API
   if (xirrData && xirrData.length > 0) {
-    console.log('Bubble: using inline xirr data, count=', xirrData.length, 'sample=', JSON.stringify(xirrData[0]));
+    console.log('Bubble: inline xirr count=', xirrData.length, 'sample=', JSON.stringify(xirrData[0]));
     drawBubble(xirrData); return;
   }
 
   // 2. Try separate xirr API call
   var apiBase = API_URL.split('?')[0];
-  console.log('Bubble: fetching xirr from', apiBase + '?action=xirr');
   fetch(apiBase + '?action=xirr', { redirect: 'follow' })
     .then(function(r){ return r.json(); })
     .then(function(json){
-      console.log('Bubble xirr API ok=', json.ok, 'count=', json.data ? json.data.length : 0);
+      console.log('Bubble xirr API: ok=', json.ok, 'count=', json.data ? json.data.length : 0);
       if (json.ok && json.data && json.data.length > 0) {
-        console.log('Bubble: xirr sample=', JSON.stringify(json.data[0]));
         drawBubble(json.data);
       } else {
-        console.log('Bubble: xirr empty, falling back to exits. exits count=', exitsData ? exitsData.length : 0);
+        // 3. Try exits data
         drawBubbleFromExits(exitsData);
       }
     })
     .catch(function(err){
-      console.warn('Bubble: xirr fetch failed:', err.message, '— using exits');
+      console.warn('Bubble xirr fetch failed:', err.message);
       drawBubbleFromExits(exitsData);
     });
 }
 
 function drawBubbleFromExits(exitsData) {
-  var src = (exitsData && exitsData.length > 0) ? exitsData : MOCK_EXITS;
-  console.log('Bubble drawBubbleFromExits: src count=', src.length, src === MOCK_EXITS ? '(MOCK)' : '(real exits)');
-  var pts = src.map(function(e, i){
+  if (!exitsData || exitsData.length === 0) {
+    // Show empty state — no mock
+    var canvas = document.getElementById('bubbleChart');
+    var wrap = canvas && canvas.parentElement;
+    if (wrap) {
+      wrap.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--t4)">' +
+        '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        '<span style="font-size:12px;font-weight:600">No exits data</span>' +
+        '<span style="font-size:11px">XIRR sheet data not found — check Code.gs getXirrData()</span>' +
+        '</div>';
+    }
+    return;
+  }
+  var pts = exitsData.map(function(e, i){
     var gainPct = e.gainPct !== undefined ? e.gainPct
                 : (e.buyPrice > 0 ? ((e.sellPrice - e.buyPrice) / e.buyPrice * 100) : 0);
     var holdDays = e.holdDays || (20 + i * 12);
@@ -954,8 +874,8 @@ function drawBubble(pts) {
 
   console.log('drawBubble: parsed', parsed.length, 'points. Sample:', parsed.length ? JSON.stringify(parsed[0]) : 'none');
   if (parsed.length === 0) {
-    // Last resort: draw MOCK so chart is never blank
-    parsed = MOCK_EXITS.map(function(e){ return { symbol:e.symbol, holdDays:e.holdDays, gainPct:e.gainPct, gainLoss:Math.abs(e.gainLoss) }; });
+    drawBubbleFromExits([]); // show empty state
+    return;
   }
 
   // Bubble radius: proportional to gainLoss, clamped 4–28
@@ -1219,14 +1139,9 @@ function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v>=0?'+':'')+(+v
   }
 })();
 
-// Step 1: Populate holdings with MOCK silently (for table structure),
-// but keep overlay VISIBLE so user never sees mock data.
-// renderAll(MOCK) is NOT called here — overlay stays up until real API data arrives.
-holdings = MOCK.portfolio.holdings; // silent, no render
-
-// Step 2: Load Chart.js then fetch real data
+// Load Chart.js then fetch real data
 function startDashboard() {
-  loadAll();  // fetch real API data; overlay hides when done
+  loadAll();
   setInterval(loadAll, 5 * 60 * 1000);
 }
 var cjsScript = document.createElement('script');
