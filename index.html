@@ -410,11 +410,33 @@ async function loadAll() {
     var json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'API error');
     renderAll(json.data);
+    // Always fetch full index table separately — buildDashboardData's indexData.table
+    // may be empty if an older GAS deployment is serving the 'all' response.
+    loadIndicesSeparately();
   } catch(e) {
     console.error('API fetch failed:', e.message);
     setStatus('err', 'API Error: ' + e.message);
     renderAll(null);   // render zero/blank state — no mock
   }
+}
+
+// Fetches ?action=indices separately and repopulates both the KPI card
+// and the full index table — resilient to old GAS deployments.
+function loadIndicesSeparately() {
+  var apiBase = API_URL.split('?')[0];
+  fetch(apiBase + '?action=indices', { redirect: 'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (json.ok && json.data) {
+        var idxData = json.data;
+        // Repopulate the full index table
+        renderIndexTable(idxData);
+        // Repopulate the KPI strip index card (nifty + nifty500)
+        renderIndexCard(idxData);
+        console.log('Indices reloaded: table rows=', idxData.table ? idxData.table.length : 0);
+      }
+    })
+    .catch(function(e){ console.warn('Indices separate fetch failed:', e.message); });
 }
 
 function renderAll(data) {
@@ -812,16 +834,19 @@ function renderBubbleChart(exitsData, xirrData) {
   var canvas = document.getElementById('bubbleChart');
   if (!canvas) return;
 
-  // Priority 1: exits data (fast, reliable, from Exits sheet)
-  if (exitsData && exitsData.length > 0) {
-    console.log('Bubble: using exits data, count=', exitsData.length, 'sample=', JSON.stringify(exitsData[0]));
-    drawBubbleFromExits(exitsData);
+  // Priority 1: exits data — only use if at least some entries have valid holdDays > 0
+  // (holdDays=0 means buyDate was missing in Exits sheet — useless for the chart)
+  var validExits = (exitsData || []).filter(function(e){ return (e.holdDays || 0) > 0; });
+  if (validExits.length > 0) {
+    console.log('Bubble: using exits data, valid count=', validExits.length, 'of', (exitsData||[]).length);
+    drawBubbleFromExits(validExits);
     return;
   }
 
-  // Priority 2: xirr inline data (if exits empty)
+  // Priority 2: xirr inline data (XIRR sheet cols L:O — Symbol/BuyDate/HoldingDays/Gain%)
+  // Used when exits all have holdDays=0 (buyDate column empty in Exits sheet)
   if (xirrData && xirrData.length > 0) {
-    console.log('Bubble: using inline xirr count=', xirrData.length);
+    console.log('Bubble: exits holdDays all 0 — falling back to XIRR data, count=', xirrData.length);
     drawBubble(xirrData);
     return;
   }
