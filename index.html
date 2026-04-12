@@ -486,7 +486,8 @@ var holdings   = [];
 var sortKey    = 'todayPct';
 var sortDir    = -1;
 var benchChartInst = null, sectorChartInst = null, ddChartInst = null, bubbleChartInst = null;
-var hiddenSeries = {};
+// Default: only MOMN PF + NSE50 visible, rest hidden until toggled
+var hiddenSeries = { nse500:true, bseSmlcap:true, n200Momn30:true, alpha50:true };
 
 // ================================================================
 // DATA LOAD
