@@ -296,6 +296,14 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Bubble Chart: Holding Days vs % Gain -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Holding Days vs % Gain
+      <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0;margin-left:8px">XIRR positions · bubble size = |gain%|</span>
+    </div>
+    <div id="bubbleWrap" style="position:relative;height:360px"><canvas id="bubbleChart"></canvas></div>
+  </div>
+
   <!-- Holdings Table — Symbol | Today% | Gain% | CMP | Pos% | Cap -->
   <div class="card">
     <div class="toolbar">
@@ -385,9 +393,7 @@ var INDICES_TABLE_NAMES = [
 var holdings   = [];
 var sortKey    = 'todayPct';
 var sortDir    = -1;
-var benchChartInst = null, sectorChartInst = null, ddChartInst = null;
-var hiddenSeries = { nse500:true, bseSmlcap:true, n200Momn30:true, alpha50:true };
-// Default: only MOMN PF + NSE50 visible, rest hidden until toggled
+var benchChartInst = null, sectorChartInst = null, ddChartInst = null, bubbleChartInst = null;
 var hiddenSeries = { nse500:true, bseSmlcap:true, n200Momn30:true, alpha50:true };
 
 // ================================================================
@@ -398,20 +404,66 @@ async function loadAll() {
   var ovTxt = document.getElementById('overlayTxt');
   if (ovTxt) ovTxt.textContent = 'Loading...';
   document.getElementById('overlay').classList.remove('hide');
+
   try {
     var resp = await fetch(API_URL + '?action=all', { redirect:'follow' });
     var json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'API error');
     renderAll(json.data);
+
+    // If index table still shows ≤2 rows after main load, fetch separately.
+    // This is a safety net for when GAS buildDashboardData returns empty table.
+    var idxCheck = (json.data && json.data.indexData && json.data.indexData.table) || [];
+    if (idxCheck.length < 3) {
+      console.log('Index table empty in all-response, fetching separately...');
+      setTimeout(fetchIndicesSeparately, 800);
+    }
+
+    // If xirr data missing from main response, fetch separately for bubble chart.
+    var xirrCheck = (json.data && json.data.xirr) || [];
+    if (xirrCheck.length === 0) {
+      console.log('XIRR missing in all-response, fetching separately...');
+      setTimeout(fetchXirrSeparately, 1600);
+    }
+
   } catch(e) {
     console.error('API fetch failed:', e.message);
     setStatus('err', 'API Error: ' + e.message);
     renderAll(null);
+    // Try separate fetches anyway
+    setTimeout(fetchIndicesSeparately, 800);
+    setTimeout(fetchXirrSeparately, 1600);
   }
 }
 
+function fetchIndicesSeparately() {
+  var apiBase = API_URL.split('?')[0];
+  fetch(apiBase + '?action=indices', { redirect:'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (json.ok && json.data && json.data.table && json.data.table.length > 0) {
+        console.log('Indices fetched separately: ' + json.data.table.length + ' rows');
+        renderIndexTable(json.data);
+        renderIndexCard(json.data);
+      }
+    })
+    .catch(function(e){ console.warn('fetchIndicesSeparately failed:', e.message); });
+}
+
+function fetchXirrSeparately() {
+  var apiBase = API_URL.split('?')[0];
+  fetch(apiBase + '?action=xirr', { redirect:'follow' })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (json.ok && json.data && json.data.length > 0) {
+        console.log('XIRR fetched separately: ' + json.data.length + ' records');
+        if (typeof Chart !== 'undefined') drawBubble(json.data);
+      }
+    })
+    .catch(function(e){ console.warn('fetchXirrSeparately failed:', e.message); });
+}
+
 function renderAll(data) {
-  // data = null means API failed — render blank/zero everywhere
   if (!data) {
     data = {
       portfolio:    { summary:{}, holdings:[] },
@@ -424,10 +476,12 @@ function renderAll(data) {
   }
 
   var idxData  = data.indexData || {};
+  var xirrArr  = (data.xirr && data.xirr.length > 0) ? data.xirr : [];
 
   console.log('renderAll — bench rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 0,
               '| holdings:', data.portfolio && data.portfolio.holdings ? data.portfolio.holdings.length : 0,
-              '| indexTable:', idxData.table ? idxData.table.length : 0);
+              '| indexTable:', idxData.table ? idxData.table.length : 0,
+              '| xirr:', xirrArr.length);
 
   var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
     ? data.benchmarking
@@ -441,9 +495,12 @@ function renderAll(data) {
   renderTopGL();
 
   if (typeof Chart !== 'undefined') {
-    try { renderBenchmarkChart(bench); }                   catch(e){ console.warn('Bench chart:', e.message); }
-    try { renderSector(data.portfolio.holdings || []); }   catch(e){ console.warn('Sector:', e.message); }
-    try { renderDDChart(bench); }                          catch(e){ console.warn('DD chart:', e.message); }
+    try { renderBenchmarkChart(bench); }                 catch(e){ console.warn('Bench chart:', e.message); }
+    try { renderSector(data.portfolio.holdings || []); } catch(e){ console.warn('Sector:', e.message); }
+    try { renderDDChart(bench); }                        catch(e){ console.warn('DD chart:', e.message); }
+    if (xirrArr.length > 0) {
+      try { drawBubble(xirrArr); } catch(e){ console.warn('Bubble chart:', e.message); }
+    }
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
@@ -921,6 +978,88 @@ function renderTopGL() {
 }
 
 // ================================================================
+// RENDER: Bubble Chart — Holding Days vs % Gain (XIRR data)
+// ================================================================
+function drawBubble(pts) {
+  var canvas = document.getElementById('bubbleChart');
+  if (!canvas) return;
+  var isLight = document.documentElement.classList.contains('light');
+
+  var parsed = (pts || []).map(function(p){
+    var sym  = (p.symbol||p.Symbol||p.SYMBOL||'').toString().trim();
+    var days = +(p.holdDays||p.holdingDays||p.HoldingDays||p.hold_days||0);
+    var gpct = +(p.gainPct||p.GainPct||p.gain_pct||0);
+    var gl   = Math.abs(+(p.gainLoss||p.GainLoss||gpct||0));
+    return { symbol:sym, holdDays:days, gainPct:gpct, gainLoss:gl };
+  }).filter(function(p){ return p.holdDays > 0 && p.symbol; });
+
+  if (parsed.length === 0) return;
+
+  var maxGL = Math.max.apply(null, parsed.map(function(p){ return p.gainLoss||1; })) || 1;
+  var mkBubble = function(p){ return { x:p.holdDays, y:Math.round(p.gainPct*100)/100, r:4+(p.gainLoss/maxGL)*24 }; };
+
+  var gainers = parsed.filter(function(p){ return p.gainPct >= 0; });
+  var losers  = parsed.filter(function(p){ return p.gainPct <  0; });
+
+  if (bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst = null; }
+
+  var labelPlugin = {
+    id: 'bubbleLabels',
+    afterDatasetsDraw: function(chart) {
+      try {
+        var ctx2 = chart.ctx; ctx2.save();
+        ctx2.font = '600 9px sans-serif';
+        ctx2.textAlign = 'center'; ctx2.textBaseline = 'middle';
+        ctx2.fillStyle = isLight ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.85)';
+        chart.data.datasets.forEach(function(ds, di) {
+          var arr = (di === 0) ? gainers : losers;
+          ds.data.forEach(function(pt, pi) {
+            if (pt.r > 8 && arr[pi] && arr[pi].symbol) {
+              var meta = chart.getDatasetMeta(di);
+              if (meta && meta.data && meta.data[pi] && !meta.hidden) {
+                ctx2.fillText(arr[pi].symbol.substring(0,9), meta.data[pi].x, meta.data[pi].y);
+              }
+            }
+          });
+        });
+        ctx2.restore();
+      } catch(ex){}
+    }
+  };
+
+  bubbleChartInst = new Chart(canvas, {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label:'Gainers', data:gainers.map(mkBubble), backgroundColor:'rgba(0,208,158,0.45)', borderColor:'rgba(0,208,158,0.8)', borderWidth:1 },
+        { label:'Losers',  data:losers.map(mkBubble),  backgroundColor:'rgba(251,54,64,0.4)',  borderColor:'rgba(251,54,64,0.75)', borderWidth:1 }
+      ]
+    },
+    plugins: [labelPlugin],
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:{duration:400},
+      plugins:{
+        legend:{ display:true, labels:{ color:isLight?'rgba(0,15,8,0.6)':'rgba(240,237,229,0.5)', font:{size:11,weight:'600'} }},
+        tooltip:{ callbacks:{ label:function(ctx){
+          var ds = ctx.datasetIndex===0 ? gainers : losers;
+          var p  = ds[ctx.dataIndex];
+          return p ? p.symbol+' | '+ctx.parsed.x+'d | '+(ctx.parsed.y>=0?'+':'')+ctx.parsed.y.toFixed(2)+'%' : '';
+        }}}
+      },
+      scales:{
+        x:{ title:{display:true,text:'Holding Days',color:isLight?'rgba(0,15,8,0.5)':'rgba(240,237,229,0.4)',font:{size:11,weight:'600'}},
+            ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10}},
+            grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} },
+        y:{ title:{display:true,text:'% Gain',color:isLight?'rgba(0,15,8,0.5)':'rgba(240,237,229,0.4)',font:{size:11,weight:'600'}},
+            ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10},callback:function(v){return(v>=0?'+':'')+v+'%';}},
+            grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} }
+      }
+    }
+  });
+  console.log('drawBubble: OK — gainers='+gainers.length+' losers='+losers.length);
+}
+
+// ================================================================
 // HELPERS
 // ================================================================
 function set(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; }
@@ -932,6 +1071,7 @@ function toggleTheme(){
   if(benchChartInst)  { benchChartInst.destroy();  benchChartInst=null; }
   if(sectorChartInst) { sectorChartInst.destroy(); sectorChartInst=null; }
   if(ddChartInst)     { ddChartInst.destroy();     ddChartInst=null; }
+  if(bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst=null; }
   loadAll();
 }
 
