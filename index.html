@@ -296,14 +296,6 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Bubble Chart: Holding Days vs % Gain -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title">Holding Days vs % Gain
-      <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0;margin-left:8px">XIRR positions · bubble size = |gain%|</span>
-    </div>
-    <div style="position:relative;height:360px"><canvas id="bubbleChart"></canvas></div>
-  </div>
-
   <!-- Holdings Table — Symbol | Today% | Gain% | CMP | Pos% | Cap -->
   <div class="card">
     <div class="toolbar">
@@ -393,7 +385,8 @@ var INDICES_TABLE_NAMES = [
 var holdings   = [];
 var sortKey    = 'todayPct';
 var sortDir    = -1;
-var benchChartInst = null, sectorChartInst = null, ddChartInst = null, bubbleChartInst = null;
+var benchChartInst = null, sectorChartInst = null, ddChartInst = null;
+var hiddenSeries = { nse500:true, bseSmlcap:true, n200Momn30:true, alpha50:true };
 // Default: only MOMN PF + NSE50 visible, rest hidden until toggled
 var hiddenSeries = { nse500:true, bseSmlcap:true, n200Momn30:true, alpha50:true };
 
@@ -430,12 +423,10 @@ function renderAll(data) {
     };
   }
 
-  var xirrArr  = (data.xirr  && data.xirr.length  > 0) ? data.xirr  : [];
   var idxData  = data.indexData || {};
 
   console.log('renderAll — bench rows:', data.benchmarking && data.benchmarking.rows ? data.benchmarking.rows.length : 0,
               '| holdings:', data.portfolio && data.portfolio.holdings ? data.portfolio.holdings.length : 0,
-              '| xirr:', xirrArr.length,
               '| indexTable:', idxData.table ? idxData.table.length : 0);
 
   var bench = (data.benchmarking && data.benchmarking.rows && data.benchmarking.rows.length > 0)
@@ -453,12 +444,6 @@ function renderAll(data) {
     try { renderBenchmarkChart(bench); }                   catch(e){ console.warn('Bench chart:', e.message); }
     try { renderSector(data.portfolio.holdings || []); }   catch(e){ console.warn('Sector:', e.message); }
     try { renderDDChart(bench); }                          catch(e){ console.warn('DD chart:', e.message); }
-    // Bubble chart: always use xirr data (exits have holdDays=0, useless for chart)
-    if (xirrArr.length > 0) {
-      try { drawBubble(xirrArr); } catch(e){ console.warn('Bubble chart:', e.message); }
-    } else {
-      showBubbleEmpty('No XIRR data — check Code.gs deployment');
-    }
   }
 
   setStatus('ok', 'Updated ' + new Date().toLocaleTimeString('en-IN'));
@@ -812,150 +797,6 @@ function renderDDChart(benchData) {
 }
 
 // ================================================================
-// RENDER: Bubble Chart — Holding Days vs % Gain
-// Data: XIRR sheet cols L:O (Symbol / HoldingDays / Gain%)
-// Called directly with xirrArr from renderAll — no exits data needed.
-// ================================================================
-var bubbleRawData = null;
-
-// Not called from renderAll anymore (exits holdDays=0), kept as dead code
-function renderBubbleChart(exitsData, xirrData) {
-  if (xirrData && xirrData.length > 0) drawBubble(xirrData);
-}
-
-function showBubbleEmpty(msg) {
-  var canvas = document.getElementById('bubbleChart');
-  var wrap = canvas && canvas.parentElement;
-  if (wrap) {
-    wrap.innerHTML =
-      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--t4)">' +
-      '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-      '<span style="font-size:12px;font-weight:600">' + (msg || 'No data') + '</span>' +
-      '</div>';
-  }
-}
-
-// Legacy stub — not used in current flow
-function drawBubbleFromExits(exitsData) {
-  if (!exitsData || exitsData.length === 0) { showBubbleEmpty('No exits data'); return; }
-  var pts = exitsData.map(function(e) {
-    return { symbol:e.symbol, holdDays:e.holdDays||0, gainPct:e.gainPct!==undefined?e.gainPct:0, gainLoss:Math.abs(e.gainLoss||0) };
-  }).filter(function(p){ return p.symbol && p.holdDays > 0; });
-  drawBubble(pts);
-}
-
-function drawBubble(pts) {
-  // Ensure canvas is available (showBubbleEmpty may have replaced it)
-  var wrap = document.getElementById('bubbleChart');
-  if (!wrap) {
-    // canvas was replaced by showBubbleEmpty — restore it
-    var parent = document.querySelector('#bubbleChart') || document.querySelector('[id="bubbleChart"]');
-    if (!parent) {
-      // Find the bubble card and restore canvas
-      var cards = document.querySelectorAll('.card');
-      for (var ci=0; ci<cards.length; ci++) {
-        if (cards[ci].querySelector('.card-title') && cards[ci].querySelector('.card-title').textContent.indexOf('HOLDING') >= 0) {
-          var rel = cards[ci].querySelector('[style*="position:relative"]') || cards[ci].querySelector('div[style]');
-          if (rel) { rel.innerHTML = '<canvas id="bubbleChart"></canvas>'; break; }
-        }
-      }
-    }
-  }
-
-  var canvas = document.getElementById('bubbleChart');
-  if (!canvas || canvas.tagName !== 'CANVAS') {
-    console.warn('drawBubble: canvas not found or replaced');
-    return;
-  }
-
-  var isLight = document.documentElement.classList.contains('light');
-
-  // Normalize field names
-  var parsed = pts.map(function(p){
-    var sym  = (p.symbol||p.Symbol||p.SYMBOL||p.name||'').toString().trim();
-    var days = +(p.holdDays||p.holdingDays||p.HoldingDays||p.hold_days||p.days||0);
-    var gpct = +(p.gainPct||p.GainPct||p.gain_pct||p.gainpct||p.pct||0);
-    var gl   = Math.abs(+(p.gainLoss||p.GainLoss||p.gain_loss||p.gainloss||p.gl||gpct||0));
-    return { symbol:sym, holdDays:days, gainPct:gpct, gainLoss:gl };
-  }).filter(function(p){ return p.holdDays > 0 && p.symbol; });
-
-  console.log('drawBubble: parsed', parsed.length, 'pts. Sample:', parsed.length ? JSON.stringify(parsed[0]) : 'none');
-
-  if (parsed.length === 0) { showBubbleEmpty('No data with valid holding days'); return; }
-
-  var maxGL = Math.max.apply(null, parsed.map(function(p){ return p.gainLoss||1; })) || 1;
-  var mkBubble = function(p){ return { x:p.holdDays, y:Math.round(p.gainPct*100)/100, r:4+(p.gainLoss/maxGL)*24 }; };
-
-  var gainers = parsed.filter(function(p){ return p.gainPct >= 0; });
-  var losers  = parsed.filter(function(p){ return p.gainPct < 0; });
-
-  try {
-    if (bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst = null; }
-
-    var labelPlugin = {
-      id: 'bubbleLabels',
-      afterDatasetsDraw: function(chart) {
-        try {
-          var ctx2 = chart.ctx;
-          ctx2.save();
-          ctx2.font = '600 9px sans-serif';
-          ctx2.textAlign = 'center';
-          ctx2.textBaseline = 'middle';
-          ctx2.fillStyle = isLight ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.85)';
-          chart.data.datasets.forEach(function(ds, di) {
-            var arr = (di === 0) ? gainers : losers;
-            ds.data.forEach(function(pt, pi) {
-              if (pt.r > 8 && arr[pi] && arr[pi].symbol) {
-                var meta = chart.getDatasetMeta(di);
-                if (meta && meta.data && meta.data[pi] && !meta.hidden) {
-                  var el = meta.data[pi];
-                  ctx2.fillText(arr[pi].symbol.substring(0,9), el.x, el.y);
-                }
-              }
-            });
-          });
-          ctx2.restore();
-        } catch(ex) { /* label draw failed — chart still renders */ }
-      }
-    };
-
-    bubbleChartInst = new Chart(canvas, {
-      type: 'bubble',
-      data: {
-        datasets: [
-          { label:'Gainers', data:gainers.map(mkBubble), backgroundColor:'rgba(0,208,158,0.45)', borderColor:'rgba(0,208,158,0.8)', borderWidth:1 },
-          { label:'Losers',  data:losers.map(mkBubble),  backgroundColor:'rgba(251,54,64,0.4)',  borderColor:'rgba(251,54,64,0.75)',  borderWidth:1 }
-        ]
-      },
-      plugins: [labelPlugin],
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        animation:{ duration:400 },
-        plugins:{
-          legend:{ display:true, labels:{ color:isLight?'rgba(0,15,8,0.6)':'rgba(240,237,229,0.5)', font:{size:11,weight:'600'} } },
-          tooltip:{ callbacks:{ label:function(ctx){
-            var ds = ctx.datasetIndex===0 ? gainers : losers;
-            var p  = ds[ctx.dataIndex];
-            return p ? (p.symbol||'')+' | '+ctx.parsed.x+'d | '+(ctx.parsed.y>=0?'+':'')+ctx.parsed.y.toFixed(2)+'%' : '';
-          }}}
-        },
-        scales:{
-          x:{ title:{display:true,text:'Holding Days',color:isLight?'rgba(0,15,8,0.5)':'rgba(240,237,229,0.4)',font:{size:11,weight:'600'}},
-              ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10}},
-              grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} },
-          y:{ title:{display:true,text:'% Gain',color:isLight?'rgba(0,15,8,0.5)':'rgba(240,237,229,0.4)',font:{size:11,weight:'600'}},
-              ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10},callback:function(v){return(v>=0?'+':'')+v+'%';}},
-              grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} }
-        }
-      }
-    });
-    console.log('drawBubble: chart created OK, gainers='+gainers.length+' losers='+losers.length);
-  } catch(err) {
-    console.error('drawBubble Chart error:', err);
-    showBubbleEmpty('Chart error: ' + err.message);
-  }
-}
-
 // ================================================================
 // RENDER: Sector donut (with distinct colors)
 // ================================================================
@@ -1091,7 +932,6 @@ function toggleTheme(){
   if(benchChartInst)  { benchChartInst.destroy();  benchChartInst=null; }
   if(sectorChartInst) { sectorChartInst.destroy(); sectorChartInst=null; }
   if(ddChartInst)     { ddChartInst.destroy();     ddChartInst=null; }
-  if(bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst=null; }
   loadAll();
 }
 
