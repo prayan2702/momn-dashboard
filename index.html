@@ -1003,6 +1003,15 @@ function drawBubble(pts) {
 
   if (bubbleChartInst) { bubbleChartInst.destroy(); bubbleChartInst = null; }
 
+  // ── Auto-scale Y axis with padding so extreme outliers (e.g. +219%) render correctly ──
+  var allGainPcts = parsed.map(function(p){ return p.gainPct; });
+  var rawYMin = Math.min.apply(null, allGainPcts);
+  var rawYMax = Math.max.apply(null, allGainPcts);
+  var yRange  = rawYMax - rawYMin || 10;
+  var yPad    = Math.max(yRange * 0.15, 5);
+  var yMin    = Math.floor(rawYMin - yPad);
+  var yMax    = Math.ceil(rawYMax  + yPad);
+
   var labelPlugin = {
     id: 'bubbleLabels',
     afterDatasetsDraw: function(chart) {
@@ -1051,6 +1060,7 @@ function drawBubble(pts) {
             ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10}},
             grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} },
         y:{ title:{display:true,text:'% Gain',color:isLight?'rgba(0,15,8,0.5)':'rgba(240,237,229,0.4)',font:{size:11,weight:'600'}},
+            min:yMin, max:yMax,
             ticks:{color:isLight?'rgba(0,15,8,0.4)':'rgba(240,237,229,0.35)',font:{size:10},callback:function(v){return(v>=0?'+':'')+v+'%';}},
             grid:{color:isLight?'rgba(0,0,0,0.05)':'rgba(240,237,229,0.04)'} }
       }
